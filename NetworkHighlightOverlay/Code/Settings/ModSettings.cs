@@ -100,6 +100,17 @@ namespace NetworkHighlightOverlay.Settings
 
         public bool GetCategoryEnabled(HighlightCategoryId categoryId) => _categoryStates[categoryId].IsEnabled;
 
+        public bool HasAnyCategoryEnabled
+        {
+            get
+            {
+                foreach (HighlightCategorySetting categoryState in _categoryStates.Values)
+                    if (categoryState.IsEnabled)
+                        return true;
+                return false;
+            }
+        }
+
         public void SetCategoryEnabled(HighlightCategoryId categoryId, bool value)
         {
             HighlightCategorySetting currentValue = _categoryStates[categoryId];
@@ -277,6 +288,8 @@ namespace NetworkHighlightOverlay.Settings
                     return new HighlightCategorySetting(config.HighlightHighways, config.HighwaysHue);
                 case HighlightCategoryId.RaceRoads:
                     return new HighlightCategorySetting(config.HighlightRaceRoads, config.RaceRoadsHue);
+                case HighlightCategoryId.EventRoads:
+                    return new HighlightCategorySetting(config.HighlightEventRoads, config.EventRoadsHue);
                 case HighlightCategoryId.AirportRoads:
                     return new HighlightCategorySetting(config.HighlightAirportRoads, config.AirportRoadsHue);
                 case HighlightCategoryId.TrainTracks:
@@ -321,6 +334,10 @@ namespace NetworkHighlightOverlay.Settings
                 case HighlightCategoryId.RaceRoads:
                     config.HighlightRaceRoads = state.IsEnabled;
                     config.RaceRoadsHue = state.Hue;
+                    return;
+                case HighlightCategoryId.EventRoads:
+                    config.HighlightEventRoads = state.IsEnabled;
+                    config.EventRoadsHue = state.Hue;
                     return;
                 case HighlightCategoryId.AirportRoads:
                     config.HighlightAirportRoads = state.IsEnabled;

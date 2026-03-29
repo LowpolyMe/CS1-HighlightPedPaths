@@ -13,6 +13,7 @@ namespace NetworkHighlightOverlay.Settings
         public float RoadsHue { get; set; }            = 0.5f; 
         public float HighwaysHue { get; set; } = 0.6f; 
         public float RaceRoadsHue { get; set; } = 0.58f;
+        public float EventRoadsHue { get; set; } = 0.58f;
         public float AirportRoadsHue { get; set; } = 0.11f;
         public float TrainTracksHue  { get; set; } = 0.1f;
         public float MetroTracksHue  { get; set; } = 1f;
@@ -27,6 +28,7 @@ namespace NetworkHighlightOverlay.Settings
         public bool HighlightRoads { get; set; } = true; 
         public bool HighlightHighways { get; set; } = true; 
         public bool HighlightRaceRoads { get; set; } = true;
+        public bool HighlightEventRoads { get; set; } = true;
         public bool HighlightAirportRoads { get; set; } = true;
         public bool HighlightTrainTracks { get; set; } = true;
         public bool HighlightMetroTracks { get; set; } = true; 

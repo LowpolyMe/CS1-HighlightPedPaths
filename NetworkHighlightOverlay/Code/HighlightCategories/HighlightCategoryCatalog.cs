@@ -13,18 +13,6 @@ namespace NetworkHighlightOverlay.HighlightCategories
                 SteamHelper.DLC.None,
                 HighlightCategoryGroup.RoadsAndPaths),
             new HighlightCategoryDefinition(
-                HighlightCategoryId.PinkPaths,
-                "Pink paths",
-                "SubBarRoadsMaintenance",
-                SteamHelper.DLC.None,
-                HighlightCategoryGroup.SpecialNetworks),
-            new HighlightCategoryDefinition(
-                HighlightCategoryId.TerraformingNetworks,
-                "Terraforming networks",
-                "ToolbarIconLandscaping",
-                SteamHelper.DLC.None,
-                HighlightCategoryGroup.SpecialNetworks),
-            new HighlightCategoryDefinition(
                 HighlightCategoryId.Roads,
                 "Roads",
                 "SubBarRoadsSmall",
@@ -36,18 +24,6 @@ namespace NetworkHighlightOverlay.HighlightCategories
                 "SubBarRoadsHighway",
                 SteamHelper.DLC.None,
                 HighlightCategoryGroup.RoadsAndPaths),
-            new HighlightCategoryDefinition(
-                HighlightCategoryId.RaceRoads,
-                "Races and Parades",
-                "SubBarRoadsRacesAndParades",
-                SteamHelper.DLC.RacesAndParadesDLC,
-                HighlightCategoryGroup.SpecialNetworks),
-            new HighlightCategoryDefinition(
-                HighlightCategoryId.AirportRoads,
-                "Airport road",
-                "SubBarPublicTransportAirportArea",
-                SteamHelper.DLC.AirportDLC,
-                HighlightCategoryGroup.SpecialNetworks),
             new HighlightCategoryDefinition(
                 HighlightCategoryId.TrainTracks,
                 "Train tracks",
@@ -77,7 +53,37 @@ namespace NetworkHighlightOverlay.HighlightCategories
                 "Cable car paths",
                 "SubBarPublicTransportCableCar",
                 SteamHelper.DLC.None,
-                HighlightCategoryGroup.PublicTransport)
+                HighlightCategoryGroup.PublicTransport),
+            new HighlightCategoryDefinition(
+                HighlightCategoryId.PinkPaths,
+                "Pink paths",
+                "SubBarRoadsMaintenance",
+                SteamHelper.DLC.None,
+                HighlightCategoryGroup.SpecialNetworks),
+            new HighlightCategoryDefinition(
+                HighlightCategoryId.TerraformingNetworks,
+                "Terraforming networks",
+                "ToolbarIconLandscaping",
+                SteamHelper.DLC.None,
+                HighlightCategoryGroup.SpecialNetworks),
+            new HighlightCategoryDefinition(
+                HighlightCategoryId.RaceRoads,
+                "Races and Parades",
+                "SubBarRoadsRacesAndParades",
+                SteamHelper.DLC.RacesAndParadesDLC,
+                HighlightCategoryGroup.SpecialNetworks),
+            new HighlightCategoryDefinition(
+                HighlightCategoryId.EventRoads,
+                "Event roads",
+                "SubBarRoadsRacesAndParades",
+                SteamHelper.DLC.RacesAndParadesDLC,
+                HighlightCategoryGroup.SpecialNetworks),
+            new HighlightCategoryDefinition(
+                HighlightCategoryId.AirportRoads,
+                "Airport road",
+                "SubBarPublicTransportAirportArea",
+                SteamHelper.DLC.AirportDLC,
+                HighlightCategoryGroup.SpecialNetworks)
         };
 
         public static HighlightCategoryDefinition[] GetAllEligible()

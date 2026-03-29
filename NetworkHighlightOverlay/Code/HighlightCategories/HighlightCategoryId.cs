@@ -8,6 +8,7 @@ namespace NetworkHighlightOverlay.HighlightCategories
         Roads,
         Highways,
         RaceRoads,
+        EventRoads,
         AirportRoads,
         TrainTracks,
         MetroTracks,
