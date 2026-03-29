@@ -9,7 +9,6 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
     public class ToggleButton : UIButton
     {
         #region Fields
-        private UIView _view;
         private ModSettings _settings;
         private HighlightCategoryId _categoryId;
         private ToggleButtonAtlas _toggleButtonAtlas;
@@ -45,8 +44,6 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
             _spriteName = categoryDefinition.SpriteName;
             _onHueEditRequested = onHueEditRequested;
             playAudioEvents = true;
-
-            CacheView();
 
             eventSizeChanged -= OnButtonSizeChanged;
             eventSizeChanged += OnButtonSizeChanged;
@@ -85,9 +82,13 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
 
         private void SetupVisuals()
         {
+            UIView view = UIView.GetAView();
+            if (view == null)
+                throw new InvalidOperationException("ToggleButton requires an active UIView.");
+
             atlas = _toggleButtonAtlas.GetOrCreate();
             ToggleButtonVisual.ApplyBackgroundSprites(this);
-            _icon = ToggleButtonVisual.EnsureIcon(this, _icon, _view.defaultAtlas, _spriteName);
+            _icon = ToggleButtonVisual.EnsureIcon(this, _icon, view.defaultAtlas, _spriteName);
         }
 
         private void OnButtonSizeChanged(UIComponent component, Vector2 value)
@@ -131,16 +132,6 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
             Color colorFromConfig = _settings.GetCategoryColor(_categoryId);
             colorFromConfig.a = 1f;
             return colorFromConfig;
-        }
-
-        private void CacheView()
-        {
-            if (_view != null)
-                return;
-
-            _view = UIView.GetAView();
-            if (_view == null)
-                throw new InvalidOperationException("ToggleButton requires an active UIView.");
         }
 
         private static class ToggleButtonVisual

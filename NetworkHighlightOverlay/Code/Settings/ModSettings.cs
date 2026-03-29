@@ -98,34 +98,24 @@ namespace NetworkHighlightOverlay.Settings
             SaveAndRaise(true);
         }
 
-        private void SetCategoryEnabledState(HighlightCategoryId categoryId, bool isEnabled)
-        {
-            HighlightCategorySetting currentValue = _categoryStates[categoryId];
-            if (currentValue.IsEnabled == isEnabled) return;
-
-            SetCategory(categoryId, currentValue.WithEnabled(isEnabled));
-        }
-
-        private void SetCategoryHueState(HighlightCategoryId categoryId, float hue)
-        {
-            HighlightCategorySetting currentValue = _categoryStates[categoryId];
-            if (Mathf.Approximately(currentValue.Hue, hue)) return;
-
-            SetCategory(categoryId, currentValue.WithHue(hue));
-        }
-
         public bool GetCategoryEnabled(HighlightCategoryId categoryId) => _categoryStates[categoryId].IsEnabled;
 
         public void SetCategoryEnabled(HighlightCategoryId categoryId, bool value)
         {
-            SetCategoryEnabledState(categoryId, value);
+            HighlightCategorySetting currentValue = _categoryStates[categoryId];
+            if (currentValue.IsEnabled == value) return;
+
+            SetCategory(categoryId, currentValue.WithEnabled(value));
         }
 
         public float GetCategoryHue(HighlightCategoryId categoryId) => _categoryStates[categoryId].Hue;
 
         public void SetCategoryHue(HighlightCategoryId categoryId, float value)
         {
-            SetCategoryHueState(categoryId, value);
+            HighlightCategorySetting currentValue = _categoryStates[categoryId];
+            if (Mathf.Approximately(currentValue.Hue, value)) return;
+
+            SetCategory(categoryId, currentValue.WithHue(value));
         }
 
         public Color GetCategoryColor(HighlightCategoryId categoryId) => ColorConversion.FromHue(GetCategoryHue(categoryId), HighlightStrength);

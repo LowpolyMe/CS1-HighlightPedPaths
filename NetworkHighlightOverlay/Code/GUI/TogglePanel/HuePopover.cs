@@ -15,8 +15,6 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
         private const float SliderHeight = 18f;
         private const float SliderPadding = 10f;
         private const float PopoverOffset = 6f;
-
-        private Texture2D _hueGradientTexture;
         #endregion
 
         #region Fields
@@ -50,7 +48,9 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
         public override void Start()
         {
             base.Start();
-            CacheView();
+            _view = UIView.GetAView();
+            if (_view == null)
+                throw new InvalidOperationException("HuePopover requires an active UIView.");
         }
 
         public override void OnDestroy()
@@ -59,12 +59,6 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
             {
                 _hueSlider.eventValueChanged -= OnHueSliderValueChanged;
                 _hueSlider = null;
-            }
-
-            if (_hueGradientTexture != null)
-            {
-                UnityEngine.Object.Destroy(_hueGradientTexture);
-                _hueGradientTexture = null;
             }
 
             base.OnDestroy();
@@ -129,9 +123,8 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
             thumb.disabledBgSprite = "SliderBudget";
             _hueSlider.thumbObject = thumb;
 
-            Texture2D texture = GetHueGradientTexture();
             UITextureSprite hueBar = _hueSlider.AddUIComponent<UITextureSprite>();
-            hueBar.texture = texture;
+            hueBar.texture = ModResources.GetTexture("HueGradient.png");
             hueBar.size = _hueSlider.size;
             hueBar.relativePosition = Vector3.zero;
             hueBar.zOrder = 0;
@@ -199,18 +192,6 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
             _settings.SetCategoryHue(_categoryId, Mathf.Clamp01(value));
         }
 
-        private Texture2D GetHueGradientTexture()
-        {
-            if (_hueGradientTexture == null)
-            {
-                _hueGradientTexture = ModResources.LoadTexture("HueGradient.png");
-                if (_hueGradientTexture == null)
-                    throw new InvalidOperationException("Missing required texture: Resources/HueGradient.png");
-            }
-
-            return _hueGradientTexture;
-        }
-
         private static bool IsAnyMouseButtonHeld() => Input.GetMouseButton(0) ||
                                                       Input.GetMouseButton(1) ||
                                                       Input.GetMouseButton(2);
@@ -219,14 +200,5 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
                                                                 Input.GetMouseButtonDown(1) ||
                                                                 Input.GetMouseButtonDown(2);
 
-        private void CacheView()
-        {
-            if (_view != null)
-                return;
-
-            _view = UIView.GetAView();
-            if (_view == null)
-                throw new InvalidOperationException("HuePopover requires an active UIView.");
-        }
     }
 }

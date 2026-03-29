@@ -1,91 +1,43 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using ColossalFramework.Plugins;
 using UnityEngine;
 
 namespace NetworkHighlightOverlay.Utility
 {
     public static class ModResources
     {
-        private static string _modDirectory;
+        private const string ResourcePrefix = "NetworkHighlightOverlay.Resources.";
+        private static readonly IDictionary<string, Texture2D> _sharedTextures = new Dictionary<string, Texture2D>();
 
-        private static string ModDirectory
+        public static Texture2D GetTexture(string fileName)
         {
-            get
-            {
-                if (_modDirectory == null)
-                {
-                    _modDirectory = ResolveModDirectory();
-                    Debug.Log($"[NetworkHighlightOverlay] ModDirectory resolved to: {_modDirectory}");
-                }
+            Texture2D texture;
+            if (_sharedTextures.TryGetValue(fileName, out texture) && texture != null)
+                return texture;
 
-                return _modDirectory;
-            }
+            return _sharedTextures[fileName] = LoadTexture(fileName);
         }
 
-        private static string ResolveModDirectory()
+        private static Texture2D LoadTexture(string fileName)
         {
-            try
+            string error = "Failed to load embedded texture: " + fileName;
+            using (Stream stream = typeof(ModResources).Assembly.GetManifestResourceStream(ResourcePrefix + fileName))
             {
-                PluginManager pluginManager = PluginManager.instance;
-                Assembly thisAssembly = typeof(ModResources).Assembly;
+                if (stream == null)
+                    throw new InvalidOperationException(error);
 
-                if (pluginManager != null)
+                using (BinaryReader reader = new BinaryReader(stream))
                 {
-                    foreach (PluginManager.PluginInfo plugin in pluginManager.GetPluginsInfo())
-                    {
-                        if (plugin == null)
-                            continue;
+                    byte[] data = reader.ReadBytes((int)stream.Length);
+                    Texture2D texture = new Texture2D(2, 2);
+                    if (!texture.LoadImage(data))
+                        throw new InvalidOperationException(error);
 
-                        // ✔ THIS is the correct API:
-                        List<Assembly> assemblies = plugin.GetAssemblies();
-                        if (assemblies == null)
-                            continue;
-
-                        foreach (Assembly asm in assemblies)
-                        {
-                            if (asm == thisAssembly)
-                            {
-                                if (!string.IsNullOrEmpty(plugin.modPath)) return plugin.modPath;
-                            }
-                        }
-                    }
+                    texture.wrapMode = TextureWrapMode.Clamp;
+                    return texture;
                 }
             }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"[NetworkHighlightOverlay] Failed to resolve mod path via PluginManager: {ex}");
-            }
-
-            // Fallback 1: assembly location
-            string asmLocation = typeof(ModResources).Assembly.Location;
-            if (!string.IsNullOrEmpty(asmLocation)) return Path.GetDirectoryName(asmLocation);
-
-            // Fallback 2: current directory (last resort)
-            Debug.LogWarning("[NetworkHighlightOverlay] Assembly location is empty, using Environment.CurrentDirectory as fallback.");
-            return Environment.CurrentDirectory;
-        }
-
-
-
-        private static string ResourcesPath => Path.Combine(ModDirectory, "Resources");
-
-        public static Texture2D LoadTexture(string fileName)
-        {
-            string fullPath = Path.Combine(ResourcesPath, fileName);
-            if (!File.Exists(fullPath))
-            {
-                Debug.LogError($"[NetworkHighlightOverlay] Resource not found: {fullPath}");
-                return null;
-            }
-
-            byte[] data = File.ReadAllBytes(fullPath);
-            Texture2D tex = new Texture2D(2, 2); // Will resize automatically
-            tex.LoadImage(data);
-            tex.wrapMode = TextureWrapMode.Clamp;
-            return tex;
         }
     }
 }

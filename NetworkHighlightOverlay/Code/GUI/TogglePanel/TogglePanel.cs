@@ -20,8 +20,6 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
         private ModSettings _settings;
         private ActivationHandler _activationHandler;
         private ToggleButtonAtlas _toggleButtonAtlas;
-        private Action<bool> _activationChangedHandler;
-        private Action _settingsChangedHandler;
         private UIView _view;
         private DragHandle _dragHandle;
         private HuePopover _huePopover;
@@ -43,9 +41,9 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
             _activationHandler = activationHandler;
             _toggleButtonAtlas = toggleButtonAtlas;
 
-            SubscribeToActivationChanged();
-            SubscribeToSettingsChanged();
-            RefreshVisibility();
+            _activationHandler.ActivationChanged += RefreshVisibility;
+            _settings.SettingsChanged += OnSettingsChanged;
+            RefreshVisibility(_activationHandler.IsActive);
         }
 
         public override void Awake()
@@ -72,9 +70,14 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
             if (_view == null)
                 throw new InvalidOperationException("TogglePanel requires an active UIView.");
             CreateDragHandle();
-            CreateHuePopover();
+            _huePopover = _view.AddUIComponent(typeof(HuePopover)) as HuePopover;
+            if (_huePopover == null)
+                throw new InvalidOperationException("TogglePanel failed to create the hue popover.");
             CreateButtons();
-            ApplySavedPosition();
+            Vector2 clamped = GetPositionFromSettings();
+            absolutePosition = new Vector3(clamped.x, clamped.y);
+            _settings.PanelX = clamped.x;
+            _settings.PanelY = clamped.y;
         }
 
         public override void Update()
@@ -89,64 +92,33 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
 
         public override void OnDestroy()
         {
-            UnsubscribeFromActivationChanged();
-            UnsubscribeFromSettingsChanged();
+            if (_activationHandler != null)
+            {
+                _activationHandler.ActivationChanged -= RefreshVisibility;
+            }
 
-            UnsubscribeFromDragHandleEvents();
+            if (_settings != null)
+            {
+                _settings.SettingsChanged -= OnSettingsChanged;
+            }
+
+            if (_dragHandle != null)
+            {
+                _dragHandle.eventMouseDown -= OnDragHandleMouseDown;
+                _dragHandle.eventMouseUp -= OnDragHandleMouseUp;
+            }
+
             _dragHandle = null;
             _buttons.Clear();
 
-            DestroyHuePopover();
-            base.OnDestroy();
-        }
-
-        public void CloseHuePopover()
-        {
             if (_huePopover != null)
             {
                 _huePopover.Close();
+                UnityEngine.Object.Destroy(_huePopover.gameObject);
+                _huePopover = null;
             }
-        }
 
-        private void OnActivationChanged(bool isEnabled)
-        {
-            RefreshVisibility();
-        }
-
-        private void SubscribeToActivationChanged()
-        {
-            if (_activationChangedHandler != null)
-                throw new InvalidOperationException("TogglePanel has already subscribed to ActivationChanged.");
-
-            _activationChangedHandler = OnActivationChanged;
-            _activationHandler.ActivationChanged += _activationChangedHandler;
-        }
-
-        private void UnsubscribeFromActivationChanged()
-        {
-            if (_activationHandler == null || _activationChangedHandler == null)
-                return;
-
-            _activationHandler.ActivationChanged -= _activationChangedHandler;
-            _activationChangedHandler = null;
-        }
-
-        private void SubscribeToSettingsChanged()
-        {
-            if (_settingsChangedHandler != null)
-                throw new InvalidOperationException("TogglePanel has already subscribed to SettingsChanged.");
-
-            _settingsChangedHandler = OnSettingsChanged;
-            _settings.SettingsChanged += _settingsChangedHandler;
-        }
-
-        private void UnsubscribeFromSettingsChanged()
-        {
-            if (_settings == null || _settingsChangedHandler == null)
-                return;
-
-            _settings.SettingsChanged -= _settingsChangedHandler;
-            _settingsChangedHandler = null;
+            base.OnDestroy();
         }
 
         private void CreateDragHandle()
@@ -160,12 +132,6 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
             _dragHandle.isInteractive = true;
             _dragHandle.isVisible = true;
 
-            CreateHeaderLabel();
-            SubscribeToDragHandleEvents();
-        }
-
-        private void CreateHeaderLabel()
-        {
             UILabel headerLabel = _dragHandle.AddUIComponent<UILabel>();
             headerLabel.name = "NHO_TogglePanelHeaderLabel";
             headerLabel.anchor = UIAnchorStyle.CenterHorizontal | UIAnchorStyle.CenterVertical;
@@ -178,43 +144,11 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
             headerLabel.verticalAlignment = UIVerticalAlignment.Middle;
             headerLabel.textScale = 0.8f;
             headerLabel.isInteractive = false;
-        }
-
-        private void SubscribeToDragHandleEvents()
-        {
-            if (_dragHandle == null)
-                return;
 
             _dragHandle.eventMouseDown -= OnDragHandleMouseDown;
             _dragHandle.eventMouseDown += OnDragHandleMouseDown;
             _dragHandle.eventMouseUp -= OnDragHandleMouseUp;
             _dragHandle.eventMouseUp += OnDragHandleMouseUp;
-        }
-
-        private void UnsubscribeFromDragHandleEvents()
-        {
-            if (_dragHandle == null)
-                return;
-
-            _dragHandle.eventMouseDown -= OnDragHandleMouseDown;
-            _dragHandle.eventMouseUp -= OnDragHandleMouseUp;
-        }
-
-        private void CreateHuePopover()
-        {
-            _huePopover = _view.AddUIComponent(typeof(HuePopover)) as HuePopover;
-            if (_huePopover == null)
-                throw new InvalidOperationException("TogglePanel failed to create the hue popover.");
-        }
-
-        private void DestroyHuePopover()
-        {
-            if (_huePopover == null)
-                return;
-
-            _huePopover.Close();
-            UnityEngine.Object.Destroy(_huePopover.gameObject);
-            _huePopover = null;
         }
 
         private void CreateButtons()
@@ -258,24 +192,30 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
 
         private void OnSettingsChanged()
         {
-            RefreshVisibility();
+            RefreshVisibility(_activationHandler.IsActive);
 
             if (_view != null)
             {
-                RefreshPositionFromSettings();
+                Vector2 clamped = GetPositionFromSettings();
+                Vector3 current = absolutePosition;
+                if (!Mathf.Approximately(current.x, clamped.x) || !Mathf.Approximately(current.y, clamped.y))
+                {
+                    absolutePosition = new Vector3(clamped.x, clamped.y);
+                }
             }
 
             RefreshButtonsFromSettings();
-            RefreshHuePopoverFromSettings();
+            if (_huePopover != null && _huePopover.IsOpen)
+            {
+                _huePopover.RefreshFromSettings();
+            }
         }
 
-        private void RefreshVisibility()
+        private void RefreshVisibility(bool isActive)
         {
-            bool shouldBeVisible = _activationHandler.IsActive && _settings.IsInGameTogglePanelEnabled;
+            bool shouldBeVisible = isActive && _settings.IsInGameTogglePanelEnabled;
             if (!shouldBeVisible)
-            {
-                CloseHuePopover();
-            }
+                _huePopover?.Close();
 
             isVisible = shouldBeVisible;
         }
@@ -290,46 +230,15 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
             }
         }
 
-        private void RefreshHuePopoverFromSettings()
-        {
-            if (_huePopover == null || !_huePopover.IsOpen)
-                return;
-
-            _huePopover.RefreshFromSettings();
-        }
-
-        private void ApplySavedPosition()
-        {
-            Vector2 clamped = GetPositionFromSettings();
-            absolutePosition = new Vector3(clamped.x, clamped.y);
-            _settings.PanelX = clamped.x;
-            _settings.PanelY = clamped.y;
-        }
-
-        private void RefreshPositionFromSettings()
-        {
-            Vector2 clamped = GetPositionFromSettings();
-            Vector3 current = absolutePosition;
-            if (Mathf.Approximately(current.x, clamped.x) && Mathf.Approximately(current.y, clamped.y))
-                return;
-
-            absolutePosition = new Vector3(clamped.x, clamped.y);
-        }
-
         private void OnDragHandleMouseDown(UIComponent component, UIMouseEventParameter eventParam)
         {
             if (!DragHandle.IsCtrlDown)
                 return;
 
-            CloseHuePopover();
+            _huePopover?.Close();
         }
 
         private void OnDragHandleMouseUp(UIComponent component, UIMouseEventParameter eventParam)
-        {
-            SaveCurrentPosition();
-        }
-
-        private void SaveCurrentPosition()
         {
             Vector2 currentPosition = new Vector2(absolutePosition.x, absolutePosition.y);
             Vector2 clamped = ClampToScreen(_view, currentPosition, size);

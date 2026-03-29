@@ -1,4 +1,5 @@
 using System;
+using ColossalFramework;
 using ColossalFramework.UI;
 using ICities;
 using NetworkHighlightOverlay.HighlightCategories;
@@ -11,91 +12,50 @@ namespace NetworkHighlightOverlay.GUI.Options
     public sealed class NetworkHighlighterOptionsUi
     {
         private readonly ModSettings _settings;
-        private Texture2D _hueTexture;
-        private Texture2D _valueTexture;
-        private Texture2D _widthTexture;
+        private readonly Texture2D _hueTexture;
+        private readonly Texture2D _valueTexture;
+        private readonly Texture2D _widthTexture;
+        private SavedInputKey _editingBinding;
 
         public NetworkHighlighterOptionsUi(ModSettings settings)
         {
             _settings = settings;
+            _hueTexture = ModResources.GetTexture("HueGradient.png");
+            _valueTexture = ModResources.GetTexture("ValueGradient.png");
+            _widthTexture = ModResources.GetTexture("HighlightWidth.png");
         }
 
         public void Build(UIHelperBase helper)
         {
-            EnsureTexturesLoaded();
-
             UIComponent rootComponent = (UIComponent)((UIHelper)helper).self;
-            BuildTabbedSettingsUi(rootComponent);
+            BuildOptionsTabs(rootComponent);
         }
 
-        private void EnsureTexturesLoaded()
+        private void BuildOptionsTabs(UIComponent rootComponent)
         {
-            if (_hueTexture == null)
-            {
-                _hueTexture = ModResources.LoadTexture("HueGradient.png");
-                if (_hueTexture == null)
-                    throw new InvalidOperationException("Missing required texture: Resources/HueGradient.png");
-            }
+            UIUtility.TabLayout tabLayout = UIUtility.CreateTabLayout(rootComponent);
 
-            if (_valueTexture == null)
-            {
-                _valueTexture = ModResources.LoadTexture("ValueGradient.png");
-                if (_valueTexture == null)
-                    throw new InvalidOperationException("Missing required texture: Resources/ValueGradient.png");
-            }
-
-            if (_widthTexture == null)
-            {
-                _widthTexture = ModResources.LoadTexture("HighlightWidth.png");
-                if (_widthTexture == null)
-                    throw new InvalidOperationException("Missing required texture: Resources/HighlightWidth.png");
-            }
+            BuildHighlightsTab(tabLayout);
+            BuildControlsTab(tabLayout);
+            BuildDangerZoneTab(tabLayout);
+            tabLayout.TabStrip.selectedIndex = 0;
         }
 
-        private void BuildTabbedSettingsUi(UIComponent rootComponent)
+        private void BuildHighlightsTab(UIUtility.TabLayout tabLayout)
         {
-            UIPanel tabRoot = CreateRootPanel(rootComponent);
-            UITabstrip tabStrip = CreateUITabstrip(tabRoot);
-            UITabContainer tabContainer = CreateUITabContainer(tabRoot, tabStrip);
+            UIScrollablePanel highlightsPanel = UIUtility.CreateTab(tabLayout, "Highlights", Color.white);
 
-            tabStrip.tabPages = tabContainer;
-            tabStrip.selectedIndex = -1;
-
-            BuildHighlightsTab(tabContainer, tabStrip);
-            BuildControlsTab(tabContainer, tabStrip);
-            BuildDangerZoneTab(rootComponent, tabContainer, tabStrip, tabRoot);
-
-            tabStrip.selectedIndex = 0;
+            AddSections(
+                highlightsPanel,
+                AddGeneralHighlightSection,
+                panel => AddHighlightCategorySection(panel, "Roads and Paths", HighlightCategoryGroup.RoadsAndPaths),
+                panel => AddHighlightCategorySection(panel, "Public Transport", HighlightCategoryGroup.PublicTransport),
+                panel => AddHighlightCategorySection(panel, "Special Networks", HighlightCategoryGroup.SpecialNetworks));
         }
 
-        private void BuildHighlightsTab(UITabContainer tabContainer, UITabstrip tabStrip)
+        private void BuildControlsTab(UIUtility.TabLayout tabLayout)
         {
-            UIScrollablePanel highlightsPanel = UIUtility.CreateTab(tabContainer, tabStrip, "Highlights", Color.white);
-            UIPanel generalPanel = CreateSectionPanel(highlightsPanel, "General");
-            
-            highlightsPanel.autoLayoutPadding = new RectOffset(0, 0, 10, 10);
-            
-            AddGeneralHighlightSettings(new UIHelper(generalPanel));
-            AddDivider(highlightsPanel);
-            AddHighlightCategorySection(highlightsPanel, "Roads and Paths", HighlightCategoryGroup.RoadsAndPaths);
-            AddDivider(highlightsPanel);
-            AddHighlightCategorySection(highlightsPanel, "Public Transport", HighlightCategoryGroup.PublicTransport);
-            AddDivider(highlightsPanel);
-            AddHighlightCategorySection(highlightsPanel, "Special Networks", HighlightCategoryGroup.SpecialNetworks);
-        }
-
-        private static void AddDivider(UIScrollablePanel parent)
-        {
-            UIPanel divider = parent.AddUIComponent<UIPanel>();
-            divider.name = "NHO_Divider";
-            divider.width = Mathf.Max(0f, parent.width - parent.autoLayoutPadding.horizontal);
-            divider.height = 5f;
-            divider.backgroundSprite = "ContentManagerItemBackground";
-        }
-
-        private void BuildControlsTab(UITabContainer tabContainer, UITabstrip tabStrip)
-        {
-            UIScrollablePanel controlsPanel = UIUtility.CreateTab(tabContainer, tabStrip, "Controls", Color.white);
+            UIScrollablePanel controlsPanel = UIUtility.CreateTab(tabLayout, "Controls", Color.white);
             UIHelper controlsHelper = new UIHelper(controlsPanel);
 
             UIUtility.CreateSettingToggle(
@@ -110,17 +70,16 @@ namespace NetworkHighlightOverlay.GUI.Options
                 value => _settings.IsInGameTogglePanelEnabled = value,
                 "Show in-game toggle panel");
 
-            UIKeymappingsPanel keymappingsPanel = controlsPanel.gameObject.AddComponent<UIKeymappingsPanel>();
-            keymappingsPanel.AddKeymapping("Toggle highlights hotkey", _settings.ToggleHighlightsHotkey);
+            AddKeyBinding(
+                controlsPanel,
+                "Toggle highlights hotkey",
+                _settings.ToggleHighlightsHotkey,
+                false);
         }
 
-        private void BuildDangerZoneTab(
-            UIComponent rootComponent,
-            UITabContainer tabContainer,
-            UITabstrip tabStrip,
-            UIPanel tabRoot)
+        private void BuildDangerZoneTab(UIUtility.TabLayout tabLayout)
         {
-            UIScrollablePanel dangerPanel = UIUtility.CreateTab(tabContainer, tabStrip, "DANGER ZONE", Color.red);
+            UIScrollablePanel dangerPanel = UIUtility.CreateTab(tabLayout, "DANGER ZONE", Color.red);
             UIHelper dangerHelper = new UIHelper(dangerPanel);
             dangerHelper.AddSpace(20);
             dangerHelper.AddButton(
@@ -128,51 +87,53 @@ namespace NetworkHighlightOverlay.GUI.Options
                 () =>
                 {
                     _settings.ResetToDefaults();
-                    Rebuild(rootComponent, tabRoot);
+                    Rebuild(tabLayout.Root);
                 });
         }
 
-        private void Rebuild(UIComponent rootComponent, UIPanel tabRoot)
+        private void Rebuild(UIPanel tabRoot)
         {
-            if (tabRoot != null && tabRoot.parent != null)
-            {
-                tabRoot.parent.RemoveUIComponent(tabRoot);
-                UnityEngine.Object.Destroy(tabRoot.gameObject);
-            }
+            if (tabRoot == null || tabRoot.parent == null)
+                return;
 
-            BuildTabbedSettingsUi(rootComponent);
+            UIComponent rootComponent = tabRoot.parent;
+            rootComponent.RemoveUIComponent(tabRoot);
+            UnityEngine.Object.Destroy(tabRoot.gameObject);
+            BuildOptionsTabs(rootComponent);
         }
 
-        private void AddGeneralHighlightSettings(UIHelper settingsHelper)
+        private void AddGeneralHighlightSection(UIScrollablePanel highlightsPanel)
         {
+            UIHelper generalSettings = UIUtility.CreateSection(highlightsPanel, "General");
+            highlightsPanel.autoLayoutPadding = new RectOffset(0, 0, 10, 10);
+
             UIUtility.CreateSettingSlider(
-                settingsHelper,
+                generalSettings,
                 _settings.HighlightStrength,
                 value => _settings.HighlightStrength = value,
                 _valueTexture,
                 "Highlight Strength");
 
             UIUtility.CreateSettingSlider(
-                settingsHelper,
+                generalSettings,
                 _settings.HighlightWidth,
                 value => _settings.HighlightWidth = value,
                 _widthTexture,
                 "Highlight Thickness");
 
             UIUtility.CreateSettingToggle(
-                settingsHelper,
+                generalSettings,
                 _settings.HighlightBridges,
                 value => _settings.HighlightBridges = value,
                 "Highlight bridges",
                 "toggle highlight for bridges");
 
             UIUtility.CreateSettingToggle(
-                settingsHelper,
+                generalSettings,
                 _settings.HighlightTunnels,
                 value => _settings.HighlightTunnels = value,
                 "Highlight tunnels",
                 "toggle highlight for tunnels");
-            
         }
 
         private void AddHighlightCategorySection(
@@ -180,8 +141,7 @@ namespace NetworkHighlightOverlay.GUI.Options
             string title,
             HighlightCategoryGroup categoryGroup)
         {
-            UIPanel groupPanel = CreateSectionPanel(settingsPanel, title);
-            UIHelper groupHelper = new UIHelper(groupPanel);
+            UIHelper groupHelper = UIUtility.CreateSection(settingsPanel, title);
 
             HighlightCategoryDefinition[] definitions = HighlightCategoryCatalog.GetEligible(categoryGroup);
             int definitionCount = definitions.Length;
@@ -208,62 +168,156 @@ namespace NetworkHighlightOverlay.GUI.Options
                 _hueTexture);
         }
 
-        private static UIPanel CreateSectionPanel(UIScrollablePanel settingsPanel, string title)
+        private void AddKeyBinding(
+            UIComponent parent,
+            string label,
+            SavedInputKey savedInputKey,
+            bool useAlternateBackground)
         {
-            UIPanel groupPanel = settingsPanel.AddUIComponent<UIPanel>();
-            groupPanel.autoLayout = true;
-            groupPanel.autoLayoutDirection = LayoutDirection.Vertical;
-            groupPanel.autoLayoutPadding = new RectOffset(0, 0, 0, 6);
-            groupPanel.autoFitChildrenHorizontally = false;
-            groupPanel.autoFitChildrenVertically = true;
-            groupPanel.clipChildren = true;
-            groupPanel.width = Mathf.Max(0f, settingsPanel.width - settingsPanel.autoLayoutPadding.horizontal);
-            AddSectionHeader(groupPanel, title);
-            return groupPanel;
+            UIButton bindingButton = UIUtility.CreateKeyBindingButton(
+                parent,
+                label,
+                savedInputKey.ToLocalizedString("KEYNAME"),
+                savedInputKey,
+                useAlternateBackground);
+
+            bindingButton.eventKeyDown += OnBindingKeyDown;
+            bindingButton.eventMouseDown += OnBindingMouseDown;
+            bindingButton.eventVisibilityChanged += OnBindingVisibilityChanged;
         }
 
-        private static void AddSectionHeader(UIComponent parent, string title)
+        private static bool IsModifierKey(KeyCode code)
         {
-            UILabel label = parent.AddUIComponent<UILabel>();
-            label.name = "NHO_SectionHeader_" + title.Replace(' ', '_');
-            label.text = title;
-            label.textColor = Color.white;
-            label.textScale = 1.1f;
-            label.autoSize = true;
+            switch (code)
+            {
+                case KeyCode.LeftControl:
+                case KeyCode.RightControl:
+                case KeyCode.LeftShift:
+                case KeyCode.RightShift:
+                case KeyCode.LeftAlt:
+                case KeyCode.RightAlt:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
-        private static UIPanel CreateRootPanel(UIComponent rootComponent)
+        private static void OnBindingVisibilityChanged(UIComponent component, bool isVisible)
         {
-            UIPanel tabRoot = rootComponent.AddUIComponent<UIPanel>();
-            tabRoot.name = "NHO_TabRoot";
-            tabRoot.autoLayout = false;
-            tabRoot.clipChildren = true;
-            tabRoot.relativePosition = new Vector3(10f, 10f);
-            tabRoot.width = Mathf.Max(0f, rootComponent.width - 20f);
-            tabRoot.height = Mathf.Max(0f, rootComponent.height - 20f);
-            return tabRoot;
+            if (isVisible && component.objectUserData is SavedInputKey savedInputKey)
+                (component as UIButton).text = savedInputKey.ToLocalizedString("KEYNAME");
         }
 
-        private static UITabContainer CreateUITabContainer(UIComponent parent, UITabstrip tabStrip)
+        private void OnBindingKeyDown(UIComponent component, UIKeyEventParameter parameter)
         {
-            UITabContainer tabContainer = parent.AddUIComponent<UITabContainer>();
-            tabContainer.name = "NHO_TabContainer";
-            tabContainer.relativePosition = new Vector3(0f, tabStrip.height + 5f);
-            tabContainer.width = parent.width;
-            tabContainer.height = Mathf.Max(0f, parent.height - tabStrip.height - 5f);
-            return tabContainer;
+            if (_editingBinding == null || IsModifierKey(parameter.keycode))
+                return;
+
+            parameter.Use();
+            UIView.PopModal();
+
+            InputKey value = parameter.keycode == KeyCode.Escape
+                ? _editingBinding.value
+                : SavedInputKey.Encode(parameter.keycode, parameter.control, parameter.shift, parameter.alt);
+            if (parameter.keycode == KeyCode.Backspace)
+                value = SavedInputKey.Empty;
+
+            _editingBinding.value = value;
+            (parameter.source as UITextComponent).text = _editingBinding.ToLocalizedString("KEYNAME");
+            _editingBinding = null;
         }
 
-        private static UITabstrip CreateUITabstrip(UIComponent parent)
+        private void OnBindingMouseDown(UIComponent component, UIMouseEventParameter parameter)
         {
-            UITabstrip tabStrip = parent.AddUIComponent<UITabstrip>();
-            tabStrip.name = "NHO_TabStrip";
-            tabStrip.width = parent.width;
-            tabStrip.height = 30f;
-            tabStrip.relativePosition = new Vector3(0f, 0f);
-            tabStrip.padding = new RectOffset(5, 5, 0, 0);
-            return tabStrip;
+            if (_editingBinding == null)
+            {
+                parameter.Use();
+                _editingBinding = (SavedInputKey)parameter.source.objectUserData;
+                UIButton button = parameter.source as UIButton;
+                button.buttonsMask = UIMouseButton.Left |
+                                     UIMouseButton.Right |
+                                     UIMouseButton.Middle |
+                                     UIMouseButton.Special0 |
+                                     UIMouseButton.Special1 |
+                                     UIMouseButton.Special2 |
+                                     UIMouseButton.Special3;
+                button.text = "Press any key";
+                parameter.source.Focus();
+                UIView.PushModal(parameter.source);
+                return;
+            }
+
+            InputKey value;
+            if (!TryEncodeMouseBinding(parameter.buttons, out value))
+                return;
+
+            parameter.Use();
+            UIView.PopModal();
+
+            _editingBinding.value = value;
+
+            UIButton sourceButton = parameter.source as UIButton;
+            sourceButton.text = _editingBinding.ToLocalizedString("KEYNAME");
+            sourceButton.buttonsMask = UIMouseButton.Left;
+            _editingBinding = null;
         }
 
+        private static bool TryEncodeMouseBinding(UIMouseButton button, out InputKey value)
+        {
+            value = SavedInputKey.Empty;
+            if (button == UIMouseButton.Left || button == UIMouseButton.Right)
+                return false;
+
+            bool control;
+            bool shift;
+            bool alt;
+            GetCurrentModifiers(out control, out shift, out alt);
+            value = SavedInputKey.Encode(TranslateMouseButton(button), control, shift, alt);
+            return true;
+        }
+
+        private static void GetCurrentModifiers(out bool control, out bool shift, out bool alt)
+        {
+            control = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+            shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            alt = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
+        }
+
+        private static KeyCode TranslateMouseButton(UIMouseButton button)
+        {
+            switch (button)
+            {
+                case UIMouseButton.Left:
+                    return KeyCode.Mouse0;
+                case UIMouseButton.Right:
+                    return KeyCode.Mouse1;
+                case UIMouseButton.Middle:
+                    return KeyCode.Mouse2;
+                case UIMouseButton.Special0:
+                    return KeyCode.Mouse3;
+                case UIMouseButton.Special1:
+                    return KeyCode.Mouse4;
+                case UIMouseButton.Special2:
+                    return KeyCode.Mouse5;
+                case UIMouseButton.Special3:
+                    return KeyCode.Mouse6;
+                default:
+                    return KeyCode.None;
+            }
+        }
+
+        private static void AddSections(
+            UIScrollablePanel panel,
+            params Action<UIScrollablePanel>[] sectionBuilders)
+        {
+            int sectionCount = sectionBuilders.Length;
+            for (int i = 0; i < sectionCount; i++)
+            {
+                if (i > 0)
+                    UIUtility.AddSectionDivider(panel);
+
+                sectionBuilders[i](panel);
+            }
+        }
     }
 }

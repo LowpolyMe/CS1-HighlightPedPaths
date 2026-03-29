@@ -8,7 +8,6 @@ namespace NetworkHighlightOverlay.Core
     {
         private Manager _manager;
         private ModSettings _settings;
-        private Action _highlightRulesChangedHandler;
         private bool _isActive;
 
         public event Action<bool> ActivationChanged;
@@ -32,14 +31,17 @@ namespace NetworkHighlightOverlay.Core
             if (isActive) _manager.OnActivated();
             else _manager.OnDeactivated();
 
-            RaiseActivationChanged(isActive);
+            Action<bool> activationChanged = ActivationChanged;
+            if (activationChanged != null)
+            {
+                activationChanged(isActive);
+            }
         }
 
         private void Start()
         {
             EnsureInitialized();
-            _highlightRulesChangedHandler = OnHighlightRulesChanged;
-            _settings.HighlightRulesChanged += _highlightRulesChangedHandler;
+            _settings.HighlightRulesChanged += _manager.OnHighlightRulesChanged;
         }
 
         private void Update()
@@ -52,29 +54,9 @@ namespace NetworkHighlightOverlay.Core
         private void OnDestroy()
         {
             SetActive(false);
-            UnsubscribeFromSettingsEvents();
-        }
-
-        private void OnHighlightRulesChanged()
-        {
-            _manager.OnHighlightRulesChanged();
-        }
-
-        private void UnsubscribeFromSettingsEvents()
-        {
-            if (_settings != null && _highlightRulesChangedHandler != null)
+            if (_settings != null && _manager != null)
             {
-                _settings.HighlightRulesChanged -= _highlightRulesChangedHandler;
-                _highlightRulesChangedHandler = null;
-            }
-        }
-
-        private void RaiseActivationChanged(bool isActive)
-        {
-            Action<bool> activationChanged = ActivationChanged;
-            if (activationChanged != null)
-            {
-                activationChanged(isActive);
+                _settings.HighlightRulesChanged -= _manager.OnHighlightRulesChanged;
             }
         }
 

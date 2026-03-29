@@ -4,20 +4,57 @@ using UnityEngine;
 
 namespace NetworkHighlightOverlay.GUI.Options
 {
-    public static class UIUtility
+    internal static class UIUtility
     {
-        public static UIScrollablePanel CreateTab(
-            UITabContainer tabContainer,
-            UITabstrip tabStrip,
-            string title,
-            Color tintColor)
+        public sealed class TabLayout
+        {
+            public readonly UIPanel Root;
+            public readonly UITabstrip TabStrip;
+            public readonly UITabContainer TabContainer;
+
+            public TabLayout(UIPanel root, UITabstrip tabStrip, UITabContainer tabContainer)
+            {
+                Root = root;
+                TabStrip = tabStrip;
+                TabContainer = tabContainer;
+            }
+        }
+
+        public static TabLayout CreateTabLayout(UIComponent rootComponent)
+        {
+            UIPanel root = CreateRootPanel(rootComponent);
+            UITabstrip tabStrip = CreateTabStrip(root);
+            UITabContainer tabContainer = CreateTabContainer(root, tabStrip);
+
+            tabStrip.tabPages = tabContainer;
+            tabStrip.selectedIndex = -1;
+            return new TabLayout(root, tabStrip, tabContainer);
+        }
+
+        public static UIScrollablePanel CreateTab(TabLayout tabLayout, string title, Color tintColor)
         {
             UIPanel page;
-            UIScrollablePanel scrollablePanel = CreateTabPage(tabContainer, title, out page);
-            UIButton tabButton = CreateTabButton(tabStrip, title, tintColor);
+            UIScrollablePanel scrollablePanel = CreateTabPage(tabLayout.TabContainer, title, out page);
+            UIButton tabButton = CreateTabButton(tabLayout.TabStrip, title, tintColor);
 
-            tabStrip.AddTab(title, tabButton.gameObject, page.gameObject);
+            tabLayout.TabStrip.AddTab(title, tabButton.gameObject, page.gameObject);
             return scrollablePanel;
+        }
+
+        public static UIHelper CreateSection(UIScrollablePanel settingsPanel, string title)
+        {
+            UIPanel sectionPanel = CreateSectionPanel(settingsPanel);
+            AddSectionHeader(sectionPanel, title);
+            return new UIHelper(sectionPanel);
+        }
+
+        public static void AddSectionDivider(UIScrollablePanel parent)
+        {
+            UIPanel divider = parent.AddUIComponent<UIPanel>();
+            divider.name = "NHO_Divider";
+            divider.width = Mathf.Max(0f, parent.width - parent.autoLayoutPadding.horizontal);
+            divider.height = 5f;
+            divider.backgroundSprite = "ContentManagerItemBackground";
         }
 
         public static void CreateSettingToggle(
@@ -49,19 +86,9 @@ namespace NetworkHighlightOverlay.GUI.Options
 
             UIComponent root = (UIComponent)helper.self;
             UIPanel row = (UIPanel)root.AttachUIComponent(UITemplateManager.GetAsGameObject("OptionsSliderTemplate"));
-            UILabel rowLabel = null;
-            UISlider slider = null;
-            int childCount = row.transform.childCount;
-            for (int i = 0; i < childCount; i++)
-            {
-            
-                UIComponent child = row.transform.GetChild(i).GetComponent<UIComponent>();
-                if (rowLabel == null)
-                    rowLabel = child as UILabel;
-
-                if (slider == null)
-                    slider = child as UISlider;
-            }
+            UILabel rowLabel;
+            UISlider slider;
+            FindTemplateParts(row, out rowLabel, out slider);
 
             if (string.IsNullOrEmpty(label))
             {
@@ -92,18 +119,9 @@ namespace NetworkHighlightOverlay.GUI.Options
         {
             GameObject template = UITemplateManager.GetAsGameObject("KeyBindingTemplate");
             UIPanel row = (UIPanel)parent.AttachUIComponent(template);
-            UILabel label = null;
-            UIButton button = null;
-            int childCount = row.transform.childCount;
-            for (int i = 0; i < childCount; i++)
-            {
-                UIComponent child = row.transform.GetChild(i).GetComponent<UIComponent>();
-                if (label == null)
-                    label = child as UILabel;
-
-                if (button == null)
-                    button = child as UIButton;
-            }
+            UILabel label;
+            UIButton button;
+            FindTemplateParts(row, out label, out button);
 
             if (useAlternateBackground)
                 row.backgroundSprite = null;
@@ -130,6 +148,52 @@ namespace NetworkHighlightOverlay.GUI.Options
             return tabButton;
         }
 
+        private static UITabContainer CreateTabContainer(UIComponent parent, UITabstrip tabStrip)
+        {
+            UITabContainer tabContainer = parent.AddUIComponent<UITabContainer>();
+            tabContainer.name = "NHO_TabContainer";
+            tabContainer.relativePosition = new Vector3(0f, tabStrip.height + 5f);
+            tabContainer.width = parent.width;
+            tabContainer.height = Mathf.Max(0f, parent.height - tabStrip.height - 5f);
+            return tabContainer;
+        }
+
+        private static UIPanel CreateRootPanel(UIComponent rootComponent)
+        {
+            UIPanel tabRoot = rootComponent.AddUIComponent<UIPanel>();
+            tabRoot.name = "NHO_TabRoot";
+            tabRoot.autoLayout = false;
+            tabRoot.clipChildren = true;
+            tabRoot.relativePosition = new Vector3(10f, 10f);
+            tabRoot.width = Mathf.Max(0f, rootComponent.width - 20f);
+            tabRoot.height = Mathf.Max(0f, rootComponent.height - 20f);
+            return tabRoot;
+        }
+
+        private static UIPanel CreateSectionPanel(UIScrollablePanel settingsPanel)
+        {
+            UIPanel sectionPanel = settingsPanel.AddUIComponent<UIPanel>();
+            sectionPanel.autoLayout = true;
+            sectionPanel.autoLayoutDirection = LayoutDirection.Vertical;
+            sectionPanel.autoLayoutPadding = new RectOffset(0, 0, 0, 6);
+            sectionPanel.autoFitChildrenHorizontally = false;
+            sectionPanel.autoFitChildrenVertically = true;
+            sectionPanel.clipChildren = true;
+            sectionPanel.width = Mathf.Max(0f, settingsPanel.width - settingsPanel.autoLayoutPadding.horizontal);
+            return sectionPanel;
+        }
+
+        private static UITabstrip CreateTabStrip(UIComponent parent)
+        {
+            UITabstrip tabStrip = parent.AddUIComponent<UITabstrip>();
+            tabStrip.name = "NHO_TabStrip";
+            tabStrip.width = parent.width;
+            tabStrip.height = 30f;
+            tabStrip.relativePosition = new Vector3(0f, 0f);
+            tabStrip.padding = new RectOffset(5, 5, 0, 0);
+            return tabStrip;
+        }
+
         private static UIScrollablePanel CreateTabPage(
             UITabContainer tabContainer,
             string title,
@@ -139,13 +203,13 @@ namespace NetworkHighlightOverlay.GUI.Options
             const float scrollbarGap = 5f;
 
             page = tabContainer.AddUIComponent<UIPanel>();
-            page.name = $"NHO_{title}_Page";
+            page.name = "NHO_" + title + "_Page";
             page.width = tabContainer.width;
             page.height = tabContainer.height;
             page.clipChildren = true;
 
             UIScrollablePanel scrollablePanel = page.AddUIComponent<UIScrollablePanel>();
-            scrollablePanel.name = $"NHO_{title}_ScrollPanel";
+            scrollablePanel.name = "NHO_" + title + "_ScrollPanel";
             scrollablePanel.relativePosition = Vector3.zero;
             scrollablePanel.width = Mathf.Max(0f, page.width - scrollbarWidth - scrollbarGap);
             scrollablePanel.height = page.height;
@@ -158,7 +222,7 @@ namespace NetworkHighlightOverlay.GUI.Options
             scrollablePanel.scrollWheelAmount = 40;
 
             UIScrollbar scrollbar = page.AddUIComponent<UIScrollbar>();
-            scrollbar.name = $"NHO_{title}_Scrollbar";
+            scrollbar.name = "NHO_" + title + "_Scrollbar";
             scrollbar.width = scrollbarWidth;
             scrollbar.height = page.height;
             scrollbar.relativePosition = new Vector3(page.width - scrollbar.width, 0f);
@@ -185,6 +249,16 @@ namespace NetworkHighlightOverlay.GUI.Options
             return scrollablePanel;
         }
 
+        private static void AddSectionHeader(UIComponent parent, string title)
+        {
+            UILabel label = parent.AddUIComponent<UILabel>();
+            label.name = "NHO_SectionHeader_" + title.Replace(' ', '_');
+            label.text = title;
+            label.textColor = Color.white;
+            label.textScale = 1.1f;
+            label.autoSize = true;
+        }
+
         private static void ApplySettingSliderStyle(UISlider slider, Texture2D backgroundTexture)
         {
             slider.backgroundSprite = string.Empty;
@@ -198,6 +272,30 @@ namespace NetworkHighlightOverlay.GUI.Options
             slider.eventSizeChanged += (component, size) => textureBar.size = size;
             textureBar.size = slider.size;
             slider.thumbObject.zOrder = textureBar.zOrder + 1;
+        }
+
+        private static void FindTemplateParts<TControl>(
+            UIPanel row,
+            out UILabel label,
+            out TControl control)
+            where TControl : UIComponent
+        {
+            label = null;
+            control = null;
+
+            int childCount = row.transform.childCount;
+            for (int i = 0; i < childCount; i++)
+            {
+                UIComponent child = row.transform.GetChild(i).GetComponent<UIComponent>();
+                if (label == null)
+                    label = child as UILabel;
+
+                if (control == null)
+                    control = child as TControl;
+
+                if (label != null && control != null)
+                    return;
+            }
         }
     }
 }

@@ -74,65 +74,15 @@ namespace NetworkHighlightOverlay.Lifecycle
             RuntimeHooks.Attach(_manager);
             _uuiButtonController = new UuiButtonController();
             _toggleButtonAtlas = new ToggleButtonAtlas();
-
-            CreateControllerObject();
-            CreateTogglePanel();
-        }
-
-        private void ReleaseRuntime()
-        {
-            DestroyTogglePanel();
-            DestroyControllerObject();
-            RuntimeHooks.Detach();
-
-            ToggleButtonAtlas atlas = _toggleButtonAtlas;
-            _toggleButtonAtlas = null;
-            if (atlas != null)
-            {
-                atlas.Dispose();
-            }
-
-            Manager manager = _manager;
-            _manager = null;
-            if (manager != null)
-            {
-                manager.ResetForLevelUnload();
-            }
-
-            _uuiButtonController = null;
-        }
-
-        private void CreateControllerObject()
-        {
             _controllerObject = new GameObject("PathHighlightRenderer");
             _activationHandler = _controllerObject.AddComponent<ActivationHandler>();
             _activationHandler.Initialize(_manager, _settings);
             _uuiButtonController.Initialize(_settings, _activationHandler);
             GameObject.DontDestroyOnLoad(_controllerObject);
-        }
 
-        private void DestroyControllerObject()
-        {
-            if (_controllerObject == null)
-            {
-                _activationHandler = null;
-                return;
-            }
-
-            _uuiButtonController.Dispose();
-            UnityEngine.Object.Destroy(_controllerObject);
-            _controllerObject = null;
-            _activationHandler = null;
-        }
-
-        private void CreateTogglePanel()
-        {
             UIView view = UIView.GetAView();
             if (view == null)
                 throw new InvalidOperationException("Loading requires an active UIView before creating the toggle panel.");
-
-            if (_activationHandler == null || _toggleButtonAtlas == null)
-                throw new InvalidOperationException("Loading must initialize runtime dependencies before creating the toggle panel.");
 
             TogglePanel panel = view.AddUIComponent(typeof(TogglePanel)) as TogglePanel;
             if (panel == null)
@@ -143,14 +93,41 @@ namespace NetworkHighlightOverlay.Lifecycle
             _togglePanel = panel;
         }
 
-        private void DestroyTogglePanel()
+        private void ReleaseRuntime()
         {
-            if (_togglePanel == null)
-                return;
+            if (_togglePanel != null)
+            {
+                UnityEngine.Object.Destroy(_togglePanel.gameObject);
+                _togglePanel = null;
+            }
 
-            _togglePanel.CloseHuePopover();
-            UnityEngine.Object.Destroy(_togglePanel.gameObject);
-            _togglePanel = null;
+            if (_controllerObject != null)
+            {
+                if (_uuiButtonController != null)
+                {
+                    _uuiButtonController.Dispose();
+                }
+
+                UnityEngine.Object.Destroy(_controllerObject);
+                _controllerObject = null;
+            }
+
+            _activationHandler = null;
+            RuntimeHooks.Detach();
+
+            if (_toggleButtonAtlas != null)
+            {
+                _toggleButtonAtlas.Dispose();
+                _toggleButtonAtlas = null;
+            }
+
+            if (_manager != null)
+            {
+                _manager.ResetForLevelUnload();
+                _manager = null;
+            }
+
+            _uuiButtonController = null;
         }
     }
 }

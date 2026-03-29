@@ -72,6 +72,13 @@
         <Reference Include="System.Xml" />
     </ItemGroup>
     <ItemGroup>
+        <EmbeddedResource Include="Resources\HighlightWidth.png" />
+        <EmbeddedResource Include="Resources\HueGradient.png" />
+        <EmbeddedResource Include="Resources\ToggleButton.png" />
+        <EmbeddedResource Include="Resources\UUIIcon.png" />
+        <EmbeddedResource Include="Resources\ValueGradient.png" />
+    </ItemGroup>
+    <ItemGroup>
         <Compile Include="Code\Core\ActivationHandler.cs" />
         <Compile Include="Code\Core\HighlightCache.cs" />
         <Compile Include="Code\Core\HighlightRules.cs" />
@@ -81,7 +88,6 @@
         <Compile Include="Code\Core\RuntimeHooks.cs" />
         <Compile Include="Code\GUI\Options\NetworkHighlighterMod.cs" />
         <Compile Include="Code\GUI\Options\NetworkHighlighterOptionsUi.cs" />
-        <Compile Include="Code\GUI\Options\UIKeymappingsPanel.cs" />
         <Compile Include="Code\GUI\Options\UIUtility.cs" />
         <Compile Include="Code\GUI\TogglePanel\DragHandle.cs" />
         <Compile Include="Code\GUI\TogglePanel\HuePopover.cs" />
@@ -119,7 +125,7 @@
         </PropertyGroup>
 
         <!-- Ensure destination exists -->
-        <MakeDir Directories="$(DeployDir)\Resources" />
+        <MakeDir Directories="$(DeployDir)" />
 
         <!-- Copy the compiled DLL -->
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(DeployDir)" />
@@ -129,15 +135,6 @@
               DestinationFolder="$(DeployDir)"
               SkipUnchangedFiles="true"
               Condition="Exists('$(TargetDir)UnifiedUILib.dll')" />
-
-        <!-- Copy resources (PNG, etc.) -->
-        <ItemGroup>
-            <ResourceFiles Include="Resources\**\*" />
-        </ItemGroup>
-
-        <Copy SourceFiles="@(ResourceFiles)"
-              DestinationFolder="$(DeployDir)\Resources\%(RecursiveDir)"
-              SkipUnchangedFiles="true" />
 
     </Target>
 </Project>

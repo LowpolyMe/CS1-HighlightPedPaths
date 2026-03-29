@@ -13,11 +13,8 @@ namespace NetworkHighlightOverlay.GUI.UUI
         private const string ToggleTooltip = "Toggle Network Highlights";
 
         private UUICustomButton _button;
-        private Action<bool> _toggleRequested;
         private ModSettings _settings;
         private ActivationHandler _activationHandler;
-        private Action _settingsChangedHandler;
-        private Action<bool> _activationChangedHandler;
         private bool _lastUseUuiButton;
 
         public void Initialize(ModSettings settings, ActivationHandler activationHandler)
@@ -25,27 +22,22 @@ namespace NetworkHighlightOverlay.GUI.UUI
             _settings = settings ?? throw new ArgumentNullException("settings");
             _activationHandler = activationHandler ?? throw new ArgumentNullException("activationHandler");
 
-            _settingsChangedHandler = SyncRegistration;
-            _settings.SettingsChanged += _settingsChangedHandler;
-
-            _activationChangedHandler = SetPressed;
-            _activationHandler.ActivationChanged += _activationChangedHandler;
+            _settings.SettingsChanged += SyncRegistration;
+            _activationHandler.ActivationChanged += SetPressed;
 
             SyncRegistration();
         }
 
         public void Dispose()
         {
-            if (_activationHandler != null && _activationChangedHandler != null)
+            if (_activationHandler != null)
             {
-                _activationHandler.ActivationChanged -= _activationChangedHandler;
-                _activationChangedHandler = null;
+                _activationHandler.ActivationChanged -= SetPressed;
             }
 
-            if (_settings != null && _settingsChangedHandler != null)
+            if (_settings != null)
             {
-                _settings.SettingsChanged -= _settingsChangedHandler;
-                _settingsChangedHandler = null;
+                _settings.SettingsChanged -= SyncRegistration;
             }
 
             UnregisterUui();
@@ -53,23 +45,21 @@ namespace NetworkHighlightOverlay.GUI.UUI
             _settings = null;
         }
 
-        public void RegisterUui(Action<bool> toggleRequested)
+        private void RegisterUui()
         {
-            _toggleRequested = toggleRequested;
+            if (_button != null && _button.Button != null)
+                return;
 
-            if (_button != null && _button.Button != null) return;
-
-            Texture2D iconTexture = ModResources.LoadTexture("UUIIcon.png");
             _button = UUIHelpers.RegisterCustomButton(
                 name: ButtonName,
                 groupName: null,
                 tooltip: ToggleTooltip,
-                icon: iconTexture,
-                onToggle: OnButtonToggled,
+                icon: ModResources.GetTexture("UUIIcon.png"),
+                onToggle: _activationHandler.SetActive,
                 onToolChanged: null);
         }
 
-        public void UnregisterUui()
+        private void UnregisterUui()
         {
             if (_button != null && _button.Button != null)
             {
@@ -77,20 +67,12 @@ namespace NetworkHighlightOverlay.GUI.UUI
             }
 
             _button = null;
-            _toggleRequested = null;
         }
 
-        private void OnButtonToggled(bool isPressed)
+        private void SetPressed(bool isPressed)
         {
-            Action<bool> toggleRequested = _toggleRequested;
-            if (toggleRequested == null) return;
-
-            toggleRequested(isPressed);
-        }
-
-        public void SetPressed(bool isPressed)
-        {
-            if (_button == null || _button.IsPressed == isPressed) return;
+            if (_button == null || _button.IsPressed == isPressed)
+                return;
 
             _button.IsPressed = isPressed;
         }
@@ -104,7 +86,7 @@ namespace NetworkHighlightOverlay.GUI.UUI
             _lastUseUuiButton = useUuiButton;
             if (useUuiButton)
             {
-                RegisterUui(_activationHandler.SetActive);
+                RegisterUui();
                 SetPressed(_activationHandler.IsActive);
                 return;
             }

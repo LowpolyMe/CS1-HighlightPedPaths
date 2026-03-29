@@ -23,10 +23,7 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
             if (_atlas != null)
                 return _atlas;
 
-            Texture2D texture = ModResources.LoadTexture(TextureFileName);
-            if (texture == null)
-                throw new InvalidOperationException("Missing required toggle atlas texture: Resources/" + TextureFileName);
-
+            Texture2D texture = ModResources.GetTexture(TextureFileName);
             float spriteWidth = texture.width / 4f;
             float spriteHeight = texture.height;
 
@@ -42,11 +39,6 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
 
         public void Dispose()
         {
-            Clear();
-        }
-
-        private void Clear()
-        {
             UITextureAtlas atlas = _atlas;
             _atlas = null;
 
@@ -55,12 +47,7 @@ namespace NetworkHighlightOverlay.GUI.TogglePanel
 
             if (atlas.material != null)
             {
-                Texture texture = atlas.material.mainTexture;
                 UnityEngine.Object.Destroy(atlas.material);
-                if (texture != null)
-                {
-                    UnityEngine.Object.Destroy(texture);
-                }
             }
 
             UnityEngine.Object.Destroy(atlas);
