@@ -1,34 +1,35 @@
 using System;
 using System.Collections.Generic;
 using ColossalFramework;
-using NetworkHighlightOverlay.Code.Utility;
+using NetworkHighlightOverlay.HighlightCategories;
+using NetworkHighlightOverlay.Utility;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.ModOptions
+namespace NetworkHighlightOverlay.Settings
 {
     public sealed class ModSettings
     {
         private const string KeybindingsFileName = "NetworkHighlightOverlay_Keybindings";
-        private const string ToggleOverlayHotkeyName = "NetworkHighlightOverlay_ToggleOverlay";
-        private static readonly InputKey DefaultToggleOverlayHotkey = SavedInputKey.Encode(KeyCode.F9, false, false, false);
+        private const string ToggleHighlightsHotkeyName = "NetworkHighlightOverlay_ToggleHighlightsHotkey";
+        private static readonly InputKey _defaultToggleHighlightsHotkey = SavedInputKey.Encode(KeyCode.F9, false, false, false);
 
         public static readonly ModSettings Shared = new ModSettings();
 
         private readonly Config _config;
-        private readonly SavedInputKey _toggleOverlayHotkey;
+        private readonly SavedInputKey _toggleHighlightsHotkey;
         private readonly Dictionary<HighlightCategoryId, HighlightCategorySetting> _categoryStates =
             new Dictionary<HighlightCategoryId, HighlightCategorySetting>();
 
         public event Action SettingsChanged;
         public event Action HighlightRulesChanged;
 
-        public SavedInputKey ToggleOverlayHotkey => _toggleOverlayHotkey;
+        public SavedInputKey ToggleHighlightsHotkey => _toggleHighlightsHotkey;
 
         private ModSettings()
         {
             EnsureKeybindingsSettingsFile();
-            _toggleOverlayHotkey = new SavedInputKey(
-                ToggleOverlayHotkeyName,
+            _toggleHighlightsHotkey = new SavedInputKey(
+                ToggleHighlightsHotkeyName,
                 KeybindingsFileName,
                 KeyCode.F9,
                 false,
@@ -97,34 +98,35 @@ namespace NetworkHighlightOverlay.Code.ModOptions
             SaveAndRaise(true);
         }
 
-        private void SetCategoryEnabledState(HighlightCategoryId categoryId, bool isEnabled)
-        {
-            HighlightCategorySetting currentValue = _categoryStates[categoryId];
-            if (currentValue.IsEnabled == isEnabled) return;
-
-            SetCategory(categoryId, currentValue.WithEnabled(isEnabled));
-        }
-
-        private void SetCategoryHueState(HighlightCategoryId categoryId, float hue)
-        {
-            HighlightCategorySetting currentValue = _categoryStates[categoryId];
-            if (Mathf.Approximately(currentValue.Hue, hue)) return;
-
-            SetCategory(categoryId, currentValue.WithHue(hue));
-        }
-
         public bool GetCategoryEnabled(HighlightCategoryId categoryId) => _categoryStates[categoryId].IsEnabled;
+
+        public bool HasAnyCategoryEnabled
+        {
+            get
+            {
+                foreach (HighlightCategorySetting categoryState in _categoryStates.Values)
+                    if (categoryState.IsEnabled)
+                        return true;
+                return false;
+            }
+        }
 
         public void SetCategoryEnabled(HighlightCategoryId categoryId, bool value)
         {
-            SetCategoryEnabledState(categoryId, value);
+            HighlightCategorySetting currentValue = _categoryStates[categoryId];
+            if (currentValue.IsEnabled == value) return;
+
+            SetCategory(categoryId, currentValue.WithEnabled(value));
         }
 
         public float GetCategoryHue(HighlightCategoryId categoryId) => _categoryStates[categoryId].Hue;
 
         public void SetCategoryHue(HighlightCategoryId categoryId, float value)
         {
-            SetCategoryHueState(categoryId, value);
+            HighlightCategorySetting currentValue = _categoryStates[categoryId];
+            if (Mathf.Approximately(currentValue.Hue, value)) return;
+
+            SetCategory(categoryId, currentValue.WithHue(value));
         }
 
         public Color GetCategoryColor(HighlightCategoryId categoryId) => ColorConversion.FromHue(GetCategoryHue(categoryId), HighlightStrength);
@@ -220,9 +222,22 @@ namespace NetworkHighlightOverlay.Code.ModOptions
             }
         }
 
+        public bool IsInGameTogglePanelEnabled
+        {
+            get => _config.IsInGameTogglePanelEnabled;
+            set
+            {
+                if (_config.IsInGameTogglePanelEnabled == value)
+                    return;
+
+                _config.IsInGameTogglePanelEnabled = value;
+                SaveAndRaise(false);
+            }
+        }
+
         public void ResetToDefaults()
         {
-            _toggleOverlayHotkey.value = DefaultToggleOverlayHotkey;
+            _toggleHighlightsHotkey.value = _defaultToggleHighlightsHotkey;
             ApplyConfig(new Config());
         }
 
@@ -236,6 +251,7 @@ namespace NetworkHighlightOverlay.Code.ModOptions
             _config.HighlightBridges = source.HighlightBridges;
             _config.HighlightTunnels = source.HighlightTunnels;
             _config.UseUuiButton = source.UseUuiButton;
+            _config.IsInGameTogglePanelEnabled = source.IsInGameTogglePanelEnabled;
 
             _config.PanelX = source.PanelX;
             _config.PanelY = source.PanelY;
@@ -272,6 +288,8 @@ namespace NetworkHighlightOverlay.Code.ModOptions
                     return new HighlightCategorySetting(config.HighlightHighways, config.HighwaysHue);
                 case HighlightCategoryId.RaceRoads:
                     return new HighlightCategorySetting(config.HighlightRaceRoads, config.RaceRoadsHue);
+                case HighlightCategoryId.EventRoads:
+                    return new HighlightCategorySetting(config.HighlightEventRoads, config.EventRoadsHue);
                 case HighlightCategoryId.AirportRoads:
                     return new HighlightCategorySetting(config.HighlightAirportRoads, config.AirportRoadsHue);
                 case HighlightCategoryId.TrainTracks:
@@ -316,6 +334,10 @@ namespace NetworkHighlightOverlay.Code.ModOptions
                 case HighlightCategoryId.RaceRoads:
                     config.HighlightRaceRoads = state.IsEnabled;
                     config.RaceRoadsHue = state.Hue;
+                    return;
+                case HighlightCategoryId.EventRoads:
+                    config.HighlightEventRoads = state.IsEnabled;
+                    config.EventRoadsHue = state.Hue;
                     return;
                 case HighlightCategoryId.AirportRoads:
                     config.HighlightAirportRoads = state.IsEnabled;

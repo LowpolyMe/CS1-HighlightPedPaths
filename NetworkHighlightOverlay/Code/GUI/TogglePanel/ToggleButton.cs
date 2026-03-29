@@ -1,14 +1,14 @@
-using ColossalFramework.UI;
-using NetworkHighlightOverlay.Code.ModOptions;
 using System;
+using ColossalFramework.UI;
+using NetworkHighlightOverlay.HighlightCategories;
+using NetworkHighlightOverlay.Settings;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.GUI
+namespace NetworkHighlightOverlay.GUI.TogglePanel
 {
     public class ToggleButton : UIButton
     {
         #region Fields
-        private UIView _view;
         private ModSettings _settings;
         private HighlightCategoryId _categoryId;
         private ToggleButtonAtlas _toggleButtonAtlas;
@@ -29,9 +29,9 @@ namespace NetworkHighlightOverlay.Code.GUI
             if (settings == null)
                 throw new ArgumentNullException("settings");
 
-            name = "NHO_ToggleButton_" + categoryDefinition.ToggleLabel.Replace(' ', '_');
+            name = "NHO_ToggleButton_" + categoryDefinition.Label.Replace(' ', '_');
             text = string.Empty;
-            this.tooltip = categoryDefinition.ToggleLabel + "\nRight-click to change color";
+            this.tooltip = categoryDefinition.Label + "\nRight-click to change color";
             _settings = settings;
             _categoryId = categoryDefinition.Id;
             if (toggleButtonAtlas == null)
@@ -44,8 +44,6 @@ namespace NetworkHighlightOverlay.Code.GUI
             _spriteName = categoryDefinition.SpriteName;
             _onHueEditRequested = onHueEditRequested;
             playAudioEvents = true;
-
-            CacheView();
 
             eventSizeChanged -= OnButtonSizeChanged;
             eventSizeChanged += OnButtonSizeChanged;
@@ -84,9 +82,13 @@ namespace NetworkHighlightOverlay.Code.GUI
 
         private void SetupVisuals()
         {
+            UIView view = UIView.GetAView();
+            if (view == null)
+                throw new InvalidOperationException("ToggleButton requires an active UIView.");
+
             atlas = _toggleButtonAtlas.GetOrCreate();
             ToggleButtonVisual.ApplyBackgroundSprites(this);
-            _icon = ToggleButtonVisual.EnsureIcon(this, _icon, _view.defaultAtlas, _spriteName);
+            _icon = ToggleButtonVisual.EnsureIcon(this, _icon, view.defaultAtlas, _spriteName);
         }
 
         private void OnButtonSizeChanged(UIComponent component, Vector2 value)
@@ -130,16 +132,6 @@ namespace NetworkHighlightOverlay.Code.GUI
             Color colorFromConfig = _settings.GetCategoryColor(_categoryId);
             colorFromConfig.a = 1f;
             return colorFromConfig;
-        }
-
-        private void CacheView()
-        {
-            if (_view != null)
-                return;
-
-            _view = UIView.GetAView();
-            if (_view == null)
-                throw new InvalidOperationException("ToggleButton requires an active UIView.");
         }
 
         private static class ToggleButtonVisual

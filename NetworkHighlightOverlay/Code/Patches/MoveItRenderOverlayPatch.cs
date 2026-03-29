@@ -1,8 +1,8 @@
 using System.Reflection;
 using HarmonyLib;
-using NetworkHighlightOverlay.Code.Core;
+using NetworkHighlightOverlay.Core;
 
-namespace NetworkHighlightOverlay.Code.Patches
+namespace NetworkHighlightOverlay.Patches
 {
     [HarmonyPatch]
     public static class MoveItRenderOverlayPatch

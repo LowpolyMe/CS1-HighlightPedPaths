@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using ColossalFramework.UI;
-using NetworkHighlightOverlay.Code.Utility;
+using NetworkHighlightOverlay.Utility;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.GUI
+namespace NetworkHighlightOverlay.GUI.TogglePanel
 {
     public sealed class ToggleButtonAtlas : IDisposable
     {
@@ -23,10 +23,7 @@ namespace NetworkHighlightOverlay.Code.GUI
             if (_atlas != null)
                 return _atlas;
 
-            Texture2D texture = ModResources.LoadTexture(TextureFileName);
-            if (texture == null)
-                throw new InvalidOperationException("Missing required toggle atlas texture: Resources/" + TextureFileName);
-
+            Texture2D texture = ModResources.GetTexture(TextureFileName);
             float spriteWidth = texture.width / 4f;
             float spriteHeight = texture.height;
 
@@ -42,11 +39,6 @@ namespace NetworkHighlightOverlay.Code.GUI
 
         public void Dispose()
         {
-            Clear();
-        }
-
-        private void Clear()
-        {
             UITextureAtlas atlas = _atlas;
             _atlas = null;
 
@@ -55,12 +47,7 @@ namespace NetworkHighlightOverlay.Code.GUI
 
             if (atlas.material != null)
             {
-                Texture texture = atlas.material.mainTexture;
                 UnityEngine.Object.Destroy(atlas.material);
-                if (texture != null)
-                {
-                    UnityEngine.Object.Destroy(texture);
-                }
             }
 
             UnityEngine.Object.Destroy(atlas);

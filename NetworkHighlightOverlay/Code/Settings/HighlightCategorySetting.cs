@@ -1,6 +1,6 @@
 using System;
 
-namespace NetworkHighlightOverlay.Code.ModOptions
+namespace NetworkHighlightOverlay.Settings
 {
     public struct HighlightCategorySetting : IEquatable<HighlightCategorySetting>
     {

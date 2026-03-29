@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.Utility
+namespace NetworkHighlightOverlay.Utility
 {
     public static class ColorConversion
     {

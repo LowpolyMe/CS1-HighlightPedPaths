@@ -72,6 +72,13 @@
         <Reference Include="System.Xml" />
     </ItemGroup>
     <ItemGroup>
+        <EmbeddedResource Include="Resources\HighlightWidth.png" />
+        <EmbeddedResource Include="Resources\HueGradient.png" />
+        <EmbeddedResource Include="Resources\ToggleButton.png" />
+        <EmbeddedResource Include="Resources\UUIIcon.png" />
+        <EmbeddedResource Include="Resources\ValueGradient.png" />
+    </ItemGroup>
+    <ItemGroup>
         <Compile Include="Code\Core\ActivationHandler.cs" />
         <Compile Include="Code\Core\HighlightCache.cs" />
         <Compile Include="Code\Core\HighlightRules.cs" />
@@ -79,31 +86,31 @@
         <Compile Include="Code\Core\Manager.cs" />
         <Compile Include="Code\Core\OverlayRenderer.cs" />
         <Compile Include="Code\Core\RuntimeHooks.cs" />
-        <Compile Include="Code\GUI\DragHandle.cs" />
-        <Compile Include="Code\GUI\HuePopover.cs" />
-        <Compile Include="Code\GUI\ToggleButton.cs" />
-        <Compile Include="Code\GUI\ToggleButtonAtlas.cs" />
-        <Compile Include="Code\GUI\TogglePanel.cs" />
+        <Compile Include="Code\GUI\Options\NetworkHighlighterMod.cs" />
+        <Compile Include="Code\GUI\Options\NetworkHighlighterOptionsUi.cs" />
+        <Compile Include="Code\GUI\Options\UIUtility.cs" />
+        <Compile Include="Code\GUI\TogglePanel\DragHandle.cs" />
+        <Compile Include="Code\GUI\TogglePanel\HuePopover.cs" />
+        <Compile Include="Code\GUI\TogglePanel\ToggleButton.cs" />
+        <Compile Include="Code\GUI\TogglePanel\ToggleButtonAtlas.cs" />
+        <Compile Include="Code\GUI\TogglePanel\TogglePanel.cs" />
+        <Compile Include="Code\GUI\UUI\UuiButtonController.cs" />
+        <Compile Include="Code\HighlightCategories\HighlightCategoryCatalog.cs" />
+        <Compile Include="Code\HighlightCategories\HighlightCategoryDefinition.cs" />
+        <Compile Include="Code\HighlightCategories\HighlightCategoryId.cs" />
         <Compile Include="Code\Lifecycle\Loading.cs" />
-        <Compile Include="Code\ModOptions\ModSettings.cs" />
         <Compile Include="Code\Patches\MoveItRenderOverlayPatch.cs" />
         <Compile Include="Code\Patches\NetManagerCreateSegmentPatch.cs" />
         <Compile Include="Code\Patches\NetManagerReleaseSegmentPatch.cs" />
         <Compile Include="Code\Patches\ToolRenderOverlayPatch.cs" />
-        <Compile Include="Code\ModOptions\Config.cs" />
-        <Compile Include="Code\ModOptions\HighlightCategoryCatalog.cs" />
-        <Compile Include="Code\ModOptions\HighlightCategoryDefinition.cs" />
-        <Compile Include="Code\ModOptions\HighlightCategoryId.cs" />
-        <Compile Include="Code\ModOptions\HighlightCategorySetting.cs" />
-        <Compile Include="Code\ModOptions\NetworkHighlighterMod.cs" />
-        <Compile Include="Code\ModOptions\SettingsLoader.cs" />
         <Compile Include="Code\Patches\PatchTargets.cs" />
+        <Compile Include="Code\Settings\Config.cs" />
+        <Compile Include="Code\Settings\HighlightCategorySetting.cs" />
+        <Compile Include="Code\Settings\ModSettings.cs" />
+        <Compile Include="Code\Settings\SettingsLoader.cs" />
         <Compile Include="Code\Utility\ColorConversion.cs" />
         <Compile Include="Code\Utility\ModResources.cs" />
         <Compile Include="Code\Utility\SpriteAtlasExtractor.cs" />
-        <Compile Include="Code\Utility\UIKeymappingsPanel.cs" />
-        <Compile Include="Code\Utility\UIUtility.cs" />
-        <Compile Include="Code\UUIImplementation\UUIButtonController.cs" />
         <Compile Include="Properties\AssemblyInfo.cs"/>
     </ItemGroup>
     <ItemGroup>
@@ -118,7 +125,7 @@
         </PropertyGroup>
 
         <!-- Ensure destination exists -->
-        <MakeDir Directories="$(DeployDir)\Resources" />
+        <MakeDir Directories="$(DeployDir)" />
 
         <!-- Copy the compiled DLL -->
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(DeployDir)" />
@@ -128,15 +135,6 @@
               DestinationFolder="$(DeployDir)"
               SkipUnchangedFiles="true"
               Condition="Exists('$(TargetDir)UnifiedUILib.dll')" />
-
-        <!-- Copy resources (PNG, etc.) -->
-        <ItemGroup>
-            <ResourceFiles Include="Resources\**\*" />
-        </ItemGroup>
-
-        <Copy SourceFiles="@(ResourceFiles)"
-              DestinationFolder="$(DeployDir)\Resources\%(RecursiveDir)"
-              SkipUnchangedFiles="true" />
 
     </Target>
 </Project>

@@ -1,11 +1,11 @@
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using ColossalFramework;
 using ColossalFramework.Math;
-using NetworkHighlightOverlay.Code.ModOptions;
+using NetworkHighlightOverlay.Settings;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.Core
+namespace NetworkHighlightOverlay.Core
 {
     public sealed class OverlayRenderer
     {

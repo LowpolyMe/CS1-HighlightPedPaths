@@ -1,7 +1,7 @@
 using System;
-using NetworkHighlightOverlay.Code.ModOptions;
+using NetworkHighlightOverlay.HighlightCategories;
 
-namespace NetworkHighlightOverlay.Code.Core
+namespace NetworkHighlightOverlay.Core
 {
     public static class HighlightSelection
     {
@@ -106,9 +106,17 @@ namespace NetworkHighlightOverlay.Code.Core
                 return true;
             }
 
-            if (flags.IsRaceRoad || flags.IsEventRoad || flags.IsPitLane)
+            if (flags.IsRaceRoad || flags.IsPitLane)
             {
                 categoryId = HighlightCategoryId.RaceRoads;
+                isBridge = flags.IsRoadBridge;
+                isTunnel = flags.IsRoadTunnel;
+                return true;
+            }
+
+            if (flags.IsEventRoad &&
+                TrySelectIfEnabled(HighlightCategoryId.EventRoads, isCategoryEnabled, out categoryId))
+            {
                 isBridge = flags.IsRoadBridge;
                 isTunnel = flags.IsRoadTunnel;
                 return true;

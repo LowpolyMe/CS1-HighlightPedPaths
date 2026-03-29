@@ -1,7 +1,7 @@
 using HarmonyLib;
-using NetworkHighlightOverlay.Code.Core;
+using NetworkHighlightOverlay.Core;
 
-namespace NetworkHighlightOverlay.Code.Patches
+namespace NetworkHighlightOverlay.Patches
 {
     [HarmonyPatch(typeof(ToolBase), "RenderOverlay")]
     public static class ToolRenderOverlayPatch

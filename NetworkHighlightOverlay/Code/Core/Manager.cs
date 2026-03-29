@@ -1,19 +1,17 @@
-using System.Collections.Generic;
 using System;
-using NetworkHighlightOverlay.Code.ModOptions;
+using System.Collections.Generic;
+using NetworkHighlightOverlay.Settings;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.Core
+namespace NetworkHighlightOverlay.Core
 {
     public sealed class Manager
     {
         private readonly HighlightCache _cache;
         private readonly OverlayRenderer _renderer;
-        private readonly List<KeyValuePair<ushort, Color>> _segmentSnapshot =
-            new List<KeyValuePair<ushort, Color>>(1024);
-        private bool _hasCacheSnapshot;
-        private bool _isCacheDirty;
+        private readonly List<KeyValuePair<ushort, Color>> _segmentSnapshot = new List<KeyValuePair<ushort, Color>>(1024);
         private bool _isActive;
+        private bool _isCacheDirty = true;
 
         public Manager(ModSettings settings)
         {
@@ -22,21 +20,15 @@ namespace NetworkHighlightOverlay.Code.Core
 
             _cache = new HighlightCache(settings);
             _renderer = new OverlayRenderer(settings);
-            _hasCacheSnapshot = false;
-            _isCacheDirty = false;
-            _isActive = false;
         }
 
         public void OnActivated()
         {
             _isActive = true;
+            if (!_isCacheDirty) return;
 
-            if (!_hasCacheSnapshot || _isCacheDirty)
-            {
-                _cache.RebuildCache();
-                _hasCacheSnapshot = true;
-                _isCacheDirty = false;
-            }
+            _cache.RebuildCache();
+            _isCacheDirty = false;
         }
 
         public void OnDeactivated()
@@ -47,58 +39,40 @@ namespace NetworkHighlightOverlay.Code.Core
         public void ResetForLevelUnload()
         {
             _cache.Clear();
-            _hasCacheSnapshot = false;
-            _isCacheDirty = false;
             _isActive = false;
+            _isCacheDirty = true;
         }
 
         public void OnHighlightRulesChanged()
         {
-            if (!_isActive)
-            {
-                MarkCacheDirty();
-                return;
-            }
+            if (MarkDirtyIfInactive()) return;
 
             _cache.RebuildCache();
-            _hasCacheSnapshot = true;
             _isCacheDirty = false;
         }
 
         public void OnSegmentCreated(ushort segmentId)
         {
-            if (!_isActive)
-            {
-                MarkCacheDirty();
-                return;
-            }
+            if (MarkDirtyIfInactive()) return;
 
             _cache.OnSegmentCreated(segmentId);
         }
 
         public void OnSegmentReleased(ushort segmentId)
         {
-            if (!_isActive)
-            {
-                MarkCacheDirty();
-                return;
-            }
+            if (MarkDirtyIfInactive()) return;
 
             _cache.OnSegmentReleased(segmentId);
         }
 
         public void RenderIfActive(RenderManager.CameraInfo cameraInfo)
         {
-            if (!_isActive)
-                return;
+            if (!_isActive) return;
 
             _cache.CopySegmentsTo(_segmentSnapshot);
             _renderer.Render(cameraInfo, _segmentSnapshot);
         }
 
-        private void MarkCacheDirty()
-        {
-            _isCacheDirty = true;
-        }
+        private bool MarkDirtyIfInactive() => !_isActive && (_isCacheDirty = true);
     }
 }

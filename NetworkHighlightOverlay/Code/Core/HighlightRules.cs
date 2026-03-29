@@ -1,8 +1,9 @@
 using System;
-using NetworkHighlightOverlay.Code.ModOptions;
+using NetworkHighlightOverlay.HighlightCategories;
+using NetworkHighlightOverlay.Settings;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.Core
+namespace NetworkHighlightOverlay.Core
 {
     public static class HighlightRules
     {
@@ -10,24 +11,16 @@ namespace NetworkHighlightOverlay.Code.Core
         private const string TerraformingToken = "terraforming";
         private const string PedestrianStreetClassName = "Pedestrian Street";
 
-        public static bool TryGetHighlightColor(ref NetSegment segment, ModSettings settings, out Color color)
+        public static HighlightSelection.SegmentFlags GetSegmentFlags(NetInfo info)
         {
-            color = default(Color);
-            if (settings == null) return false;
-
-            NetInfo info = segment.Info;
-            if (info == null) return false;
+            if (info == null)
+                return default(HighlightSelection.SegmentFlags);
 
             NetAI ai = info.m_netAI;
-            if (ai == null) return false;
+            if (ai == null)
+                return default(HighlightSelection.SegmentFlags);
 
-            HighlightCategoryId categoryId;
-            bool isBridge;
-            bool isTunnel;
-
-            const VehicleInfo.VehicleType TramLikeMask =
-                VehicleInfo.VehicleType.Tram |
-                VehicleInfo.VehicleType.Trolleybus;
+            const VehicleInfo.VehicleType tramLikeMask = VehicleInfo.VehicleType.Tram | VehicleInfo.VehicleType.Trolleybus;
 
             bool isRoadFamily = ai is RoadAI || ai is RoadBridgeAI || ai is RoadTunnelAI;
             bool isRoadBridge = ai is RoadBridgeAI;
@@ -46,17 +39,22 @@ namespace NetworkHighlightOverlay.Code.Core
             if (isRoadFamily)
             {
                 VehicleInfo.VehicleType laneVehicleTypes = GetLaneVehicleTypes(info);
+                ItemClass.Service service = info.GetService();
+                ItemClass.Level classLevel = info.GetClassLevel();
+                bool isRaceService = service == ItemClass.Service.Race;
+
                 isPedestrianStreet = IsPedestrianStreet(info);
-                isHighway = IsHighway(info);
-                hasTramOrTrolleyLanes = (laneVehicleTypes & TramLikeMask) != 0;
+                isHighway = ai.IsHighway();
+                hasTramOrTrolleyLanes = (laneVehicleTypes & tramLikeMask) != 0;
                 hasMonorailLanes = (laneVehicleTypes & VehicleInfo.VehicleType.Monorail) != 0;
                 hasCarLanes = (laneVehicleTypes & VehicleInfo.VehicleType.Car) != 0;
-                isRaceRoad = IsRaceRoad(info);
-                isEventRoad = IsEventRoad(info);
-                isPitLane = IsPitLane(info);
+                isRaceRoad = isRaceService && classLevel == ItemClass.Level.Level4;
+                isEventRoad = isRaceService && classLevel == ItemClass.Level.Level3;
+                isPitLane = isRaceService &&
+                            (classLevel == ItemClass.Level.Level2 || classLevel == ItemClass.Level.Level1);
             }
 
-            HighlightSelection.SegmentFlags flags = new HighlightSelection.SegmentFlags
+            return new HighlightSelection.SegmentFlags
             {
                 IsPinkPath = IsPinkPath(info, ai),
                 IsTerraformingNetwork = IsTerraformingNetwork(info),
@@ -85,6 +83,16 @@ namespace NetworkHighlightOverlay.Code.Core
                 HasMonorailLanes = hasMonorailLanes,
                 HasCarLanes = hasCarLanes
             };
+        }
+
+        public static bool TryGetHighlightColor(HighlightSelection.SegmentFlags flags, ModSettings settings, out Color color)
+        {
+            color = default(Color);
+            if (settings == null) return false;
+
+            HighlightCategoryId categoryId;
+            bool isBridge;
+            bool isTunnel;
 
             bool didSelect = HighlightSelection.TrySelectCategory(
                 flags,
@@ -111,73 +119,30 @@ namespace NetworkHighlightOverlay.Code.Core
 
         private static bool IsPinkPath(NetInfo info, NetAI ai)
         {
-            if (info == null || ai == null) return false;
-
-            if (!(ai is PedestrianPathAI)) return false;
-
-            return string.Equals(info.name, PinkPathNetworkName, StringComparison.Ordinal);
+            return ai is PedestrianPathAI &&
+                   string.Equals(info.name, PinkPathNetworkName, StringComparison.Ordinal);
         }
 
         private static bool IsTerraformingNetwork(NetInfo info)
         {
-            if (info == null) return false;
-
             string infoName = info.name;
-            if (string.IsNullOrEmpty(infoName)) return false;
-
-            if (infoName.IndexOf(TerraformingToken, StringComparison.OrdinalIgnoreCase) < 0) return false;
-
-            return info.m_flattenTerrain;
+            return !string.IsNullOrEmpty(infoName) &&
+                   infoName.IndexOf(TerraformingToken, StringComparison.OrdinalIgnoreCase) >= 0 &&
+                   info.m_flattenTerrain;
         }
 
         private static bool IsPedestrianStreet(NetInfo info)
         {
-            if (info == null || info.m_class == null) return false;
+            if (info.m_class == null) return false;
 
             string className = info.m_class.name;
-            if (string.IsNullOrEmpty(className)) return false;
-
-            return string.Equals(className, PedestrianStreetClassName, StringComparison.Ordinal);
-        }
-
-        private static bool IsRaceRoad(NetInfo netInfo)
-        {
-            if (netInfo == null) return false;
-
-            return netInfo.GetService() == ItemClass.Service.Race &&
-                   netInfo.GetClassLevel() == ItemClass.Level.Level4;
-        }
-
-        private static bool IsEventRoad(NetInfo netInfo)
-        {
-            if (netInfo == null) return false;
-
-            return netInfo.GetService() == ItemClass.Service.Race &&
-                   netInfo.GetClassLevel() == ItemClass.Level.Level3;
-        }
-
-        private static bool IsPitLane(NetInfo netInfo)
-        {
-            if (netInfo == null) return false;
-
-            if (netInfo.GetService() != ItemClass.Service.Race) return false;
-
-            ItemClass.Level classLevel = netInfo.GetClassLevel();
-            return classLevel == ItemClass.Level.Level2 ||
-                   classLevel == ItemClass.Level.Level1;
-        }
-
-        private static bool IsHighway(NetInfo info)
-        {
-            NetAI ai = info == null ? null : info.m_netAI;
-            if (ai == null) return false;
-
-            return ai.IsHighway();
+            return !string.IsNullOrEmpty(className) &&
+                   string.Equals(className, PedestrianStreetClassName, StringComparison.Ordinal);
         }
 
         private static VehicleInfo.VehicleType GetLaneVehicleTypes(NetInfo info)
         {
-            if (info == null || info.m_lanes == null) return VehicleInfo.VehicleType.None;
+            if (info.m_lanes == null) return VehicleInfo.VehicleType.None;
 
             VehicleInfo.VehicleType laneVehicleTypes = VehicleInfo.VehicleType.None;
             foreach (NetInfo.Lane lane in info.m_lanes)

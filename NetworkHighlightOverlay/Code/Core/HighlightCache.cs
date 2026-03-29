@@ -1,14 +1,16 @@
 using System;
 using System.Collections.Generic;
-using NetworkHighlightOverlay.Code.ModOptions;
+using NetworkHighlightOverlay.Settings;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.Core
+namespace NetworkHighlightOverlay.Core
 {
     public sealed class HighlightCache
     {
         private readonly ModSettings _settings;
         private readonly Dictionary<ushort, Color> _highlightedSegments = new Dictionary<ushort, Color>();
+        private readonly Dictionary<NetInfo, HighlightSelection.SegmentFlags> _segmentFlagsByInfo =
+            new Dictionary<NetInfo, HighlightSelection.SegmentFlags>();
 
         public HighlightCache(ModSettings settings)
         {
@@ -43,6 +45,7 @@ namespace NetworkHighlightOverlay.Code.Core
             lock (_highlightedSegments)
             {
                 _highlightedSegments.Clear();
+                _segmentFlagsByInfo.Clear();
             }
         }
 
@@ -51,6 +54,8 @@ namespace NetworkHighlightOverlay.Code.Core
             lock (_highlightedSegments)
             {
                 _highlightedSegments.Clear();
+                if (!_settings.HasAnyCategoryEnabled)
+                    return;
 
                 NetManager netManager = NetManager.instance;
                 Array16<NetSegment> segments = netManager.m_segments;
@@ -69,7 +74,7 @@ namespace NetworkHighlightOverlay.Code.Core
 
         public void OnSegmentCreated(ushort segmentId)
         {
-            if (segmentId == 0)
+            if (segmentId == 0 || !_settings.HasAnyCategoryEnabled)
                 return;
 
             ref NetSegment segment = ref NetManager.instance.m_segments.m_buffer[segmentId];
@@ -95,8 +100,19 @@ namespace NetworkHighlightOverlay.Code.Core
 
         private void TryAddSegmentInternal(ushort id, ref NetSegment segment)
         {
+            NetInfo info = segment.Info;
+            if (info == null)
+                return;
+
+            HighlightSelection.SegmentFlags flags;
+            if (!_segmentFlagsByInfo.TryGetValue(info, out flags))
+            {
+                flags = HighlightRules.GetSegmentFlags(info);
+                _segmentFlagsByInfo[info] = flags;
+            }
+
             Color color;
-            if (HighlightRules.TryGetHighlightColor(ref segment, _settings, out color))
+            if (HighlightRules.TryGetHighlightColor(flags, _settings, out color))
             {
                 _highlightedSegments[id] = color;
             }
