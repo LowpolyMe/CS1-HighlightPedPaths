@@ -1,9 +1,9 @@
-using System.Collections.Generic;
 using System;
-using NetworkHighlightOverlay.Code.ModOptions;
+using System.Collections.Generic;
+using NetworkHighlightOverlay.Settings;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.Core
+namespace NetworkHighlightOverlay.Core
 {
     public sealed class Manager
     {

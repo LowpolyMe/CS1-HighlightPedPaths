@@ -1,7 +1,7 @@
 using System;
-using NetworkHighlightOverlay.Code.ModOptions;
+using NetworkHighlightOverlay.HighlightCategories;
 
-namespace NetworkHighlightOverlay.Code.Core
+namespace NetworkHighlightOverlay.Core
 {
     public static class HighlightSelection
     {

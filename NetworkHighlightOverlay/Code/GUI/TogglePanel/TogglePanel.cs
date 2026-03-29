@@ -1,11 +1,12 @@
-using ColossalFramework.UI;
-using NetworkHighlightOverlay.Code.Core;
-using NetworkHighlightOverlay.Code.ModOptions;
 using System;
 using System.Collections.Generic;
+using ColossalFramework.UI;
+using NetworkHighlightOverlay.Core;
+using NetworkHighlightOverlay.HighlightCategories;
+using NetworkHighlightOverlay.Settings;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.GUI
+namespace NetworkHighlightOverlay.GUI.TogglePanel
 {
     public class TogglePanel : UIPanel
     {
@@ -44,7 +45,7 @@ namespace NetworkHighlightOverlay.Code.GUI
 
             SubscribeToActivationChanged();
             SubscribeToSettingsChanged();
-            isVisible = _activationHandler.IsActive;
+            RefreshVisibility();
         }
 
         public override void Awake()
@@ -56,7 +57,7 @@ namespace NetworkHighlightOverlay.Code.GUI
             clipChildren = true;
             isVisible = false;
 
-            int rowCount = GetRowCount(HighlightCategoryCatalog.GetEligible().Length);
+            int rowCount = GetRowCount(HighlightCategoryCatalog.GetAllEligible().Length);
             Vector2 panelSize = new Vector2(
                 Padding * 2f + Columns * ButtonSize + (Columns - 1) * Spacing,
                 DragHandleHeight + Padding * 2f + rowCount * ButtonSize + Mathf.Max(0, rowCount - 1) * Spacing);
@@ -107,14 +108,9 @@ namespace NetworkHighlightOverlay.Code.GUI
             }
         }
 
-        private void OnEnabledStateChanged(bool isEnabled)
+        private void OnActivationChanged(bool isEnabled)
         {
-            if (!isEnabled)
-            {
-                CloseHuePopover();
-            }
-
-            isVisible = isEnabled;
+            RefreshVisibility();
         }
 
         private void SubscribeToActivationChanged()
@@ -122,7 +118,7 @@ namespace NetworkHighlightOverlay.Code.GUI
             if (_activationChangedHandler != null)
                 throw new InvalidOperationException("TogglePanel has already subscribed to ActivationChanged.");
 
-            _activationChangedHandler = OnEnabledStateChanged;
+            _activationChangedHandler = OnActivationChanged;
             _activationHandler.ActivationChanged += _activationChangedHandler;
         }
 
@@ -223,7 +219,7 @@ namespace NetworkHighlightOverlay.Code.GUI
 
         private void CreateButtons()
         {
-            HighlightCategoryDefinition[] categoryDefinitions = HighlightCategoryCatalog.GetEligible();
+            HighlightCategoryDefinition[] categoryDefinitions = HighlightCategoryCatalog.GetAllEligible();
             int categoryCount = categoryDefinitions.Length;
             for (int index = 0; index < categoryCount; index++)
             {
@@ -262,6 +258,8 @@ namespace NetworkHighlightOverlay.Code.GUI
 
         private void OnSettingsChanged()
         {
+            RefreshVisibility();
+
             if (_view != null)
             {
                 RefreshPositionFromSettings();
@@ -269,6 +267,17 @@ namespace NetworkHighlightOverlay.Code.GUI
 
             RefreshButtonsFromSettings();
             RefreshHuePopoverFromSettings();
+        }
+
+        private void RefreshVisibility()
+        {
+            bool shouldBeVisible = _activationHandler.IsActive && _settings.IsInGameTogglePanelEnabled;
+            if (!shouldBeVisible)
+            {
+                CloseHuePopover();
+            }
+
+            isVisible = shouldBeVisible;
         }
 
         private void RefreshButtonsFromSettings()

@@ -1,14 +1,14 @@
-using HarmonyLib;
-using ICities;
-using NetworkHighlightOverlay.Code.Core;
-using NetworkHighlightOverlay.Code.GUI;
-using NetworkHighlightOverlay.Code.ModOptions;
-using NetworkHighlightOverlay.Code.UI;
 using System;
 using ColossalFramework.UI;
+using HarmonyLib;
+using ICities;
+using NetworkHighlightOverlay.Core;
+using NetworkHighlightOverlay.GUI.TogglePanel;
+using NetworkHighlightOverlay.GUI.UUI;
+using NetworkHighlightOverlay.Settings;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.Lifecycle
+namespace NetworkHighlightOverlay.Lifecycle
 {
     public class Loading : LoadingExtensionBase
     {

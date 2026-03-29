@@ -1,4 +1,4 @@
-namespace NetworkHighlightOverlay.Code.ModOptions
+namespace NetworkHighlightOverlay.HighlightCategories
 {
     public enum HighlightCategoryId
     {
@@ -15,4 +15,11 @@ namespace NetworkHighlightOverlay.Code.ModOptions
         MonorailTracks,
         CableCars
     }
+    
+    public enum HighlightCategoryGroup
+    {
+        RoadsAndPaths,
+        PublicTransport,
+        SpecialNetworks
+    } 
 }

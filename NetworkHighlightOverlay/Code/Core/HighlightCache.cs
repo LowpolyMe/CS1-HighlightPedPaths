@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using NetworkHighlightOverlay.Code.ModOptions;
+using NetworkHighlightOverlay.Settings;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.Core
+namespace NetworkHighlightOverlay.Core
 {
     public sealed class HighlightCache
     {

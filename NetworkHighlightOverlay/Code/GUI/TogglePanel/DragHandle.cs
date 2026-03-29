@@ -1,7 +1,7 @@
 using ColossalFramework.UI;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.GUI
+namespace NetworkHighlightOverlay.GUI.TogglePanel
 {
     public class DragHandle : UIDragHandle
     {

@@ -1,8 +1,8 @@
 using System;
-using NetworkHighlightOverlay.Code.ModOptions;
+using NetworkHighlightOverlay.Settings;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.Core
+namespace NetworkHighlightOverlay.Core
 {
     public sealed class ActivationHandler : MonoBehaviour
     {
@@ -44,7 +44,7 @@ namespace NetworkHighlightOverlay.Code.Core
 
         private void Update()
         {
-            if (!_settings.ToggleOverlayHotkey.IsKeyUp()) return;
+            if (!_settings.ToggleHighlightsHotkey.IsKeyUp()) return;
 
             SetActive(!IsActive);
         }

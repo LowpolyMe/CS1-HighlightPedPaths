@@ -1,10 +1,11 @@
-using ColossalFramework.UI;
-using NetworkHighlightOverlay.Code.ModOptions;
-using NetworkHighlightOverlay.Code.Utility;
 using System;
+using ColossalFramework.UI;
+using NetworkHighlightOverlay.HighlightCategories;
+using NetworkHighlightOverlay.Settings;
+using NetworkHighlightOverlay.Utility;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.GUI
+namespace NetworkHighlightOverlay.GUI.TogglePanel
 {
     public class HuePopover : UIPanel
     {

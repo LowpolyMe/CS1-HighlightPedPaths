@@ -1,9 +1,10 @@
-using ColossalFramework.UI;
-using NetworkHighlightOverlay.Code.ModOptions;
 using System;
+using ColossalFramework.UI;
+using NetworkHighlightOverlay.HighlightCategories;
+using NetworkHighlightOverlay.Settings;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.GUI
+namespace NetworkHighlightOverlay.GUI.TogglePanel
 {
     public class ToggleButton : UIButton
     {
@@ -29,9 +30,9 @@ namespace NetworkHighlightOverlay.Code.GUI
             if (settings == null)
                 throw new ArgumentNullException("settings");
 
-            name = "NHO_ToggleButton_" + categoryDefinition.ToggleLabel.Replace(' ', '_');
+            name = "NHO_ToggleButton_" + categoryDefinition.Label.Replace(' ', '_');
             text = string.Empty;
-            this.tooltip = categoryDefinition.ToggleLabel + "\nRight-click to change color";
+            this.tooltip = categoryDefinition.Label + "\nRight-click to change color";
             _settings = settings;
             _categoryId = categoryDefinition.Id;
             if (toggleButtonAtlas == null)

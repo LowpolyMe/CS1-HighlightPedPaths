@@ -1,6 +1,6 @@
 using System;
 
-namespace NetworkHighlightOverlay.Code.Core
+namespace NetworkHighlightOverlay.Core
 {
     public static class RuntimeHooks
     {

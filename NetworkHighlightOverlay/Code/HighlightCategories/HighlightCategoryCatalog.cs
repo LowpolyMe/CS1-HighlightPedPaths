@@ -1,6 +1,6 @@
 using System.Linq;
 
-namespace NetworkHighlightOverlay.Code.ModOptions
+namespace NetworkHighlightOverlay.HighlightCategories
 {
     public static class HighlightCategoryCatalog
     {
@@ -9,95 +9,96 @@ namespace NetworkHighlightOverlay.Code.ModOptions
             new HighlightCategoryDefinition(
                 HighlightCategoryId.PedestrianPaths,
                 "Pedestrian paths",
-                "Pedestrian paths",
-                "Highlight pedestrian paths",
                 "SubBarBeautificationPedestrianZoneEssentials",
-                SteamHelper.DLC.None),
+                SteamHelper.DLC.None,
+                HighlightCategoryGroup.RoadsAndPaths),
             new HighlightCategoryDefinition(
                 HighlightCategoryId.PinkPaths,
                 "Pink paths",
-                "Pink paths",
-                "Highlight pink paths",
                 "SubBarRoadsMaintenance",
-                SteamHelper.DLC.None),
+                SteamHelper.DLC.None,
+                HighlightCategoryGroup.SpecialNetworks),
             new HighlightCategoryDefinition(
                 HighlightCategoryId.TerraformingNetworks,
                 "Terraforming networks",
-                "Terraforming networks",
-                "Highlight terraforming networks",
                 "ToolbarIconLandscaping",
-                SteamHelper.DLC.None),
+                SteamHelper.DLC.None,
+                HighlightCategoryGroup.SpecialNetworks),
             new HighlightCategoryDefinition(
                 HighlightCategoryId.Roads,
                 "Roads",
-                "Roads",
-                "Highlight roads",
                 "SubBarRoadsSmall",
-                SteamHelper.DLC.None),
+                SteamHelper.DLC.None,
+                HighlightCategoryGroup.RoadsAndPaths),
             new HighlightCategoryDefinition(
                 HighlightCategoryId.Highways,
                 "Highways",
-                "Highways",
-                "Highlight highways",
                 "SubBarRoadsHighway",
-                SteamHelper.DLC.None),
+                SteamHelper.DLC.None,
+                HighlightCategoryGroup.RoadsAndPaths),
             new HighlightCategoryDefinition(
                 HighlightCategoryId.RaceRoads,
                 "Races and Parades",
-                "Races and Parades",
-                "Highlight races and parades roads",
                 "SubBarRoadsRacesAndParades",
-                SteamHelper.DLC.RacesAndParadesDLC),
+                SteamHelper.DLC.RacesAndParadesDLC,
+                HighlightCategoryGroup.SpecialNetworks),
             new HighlightCategoryDefinition(
                 HighlightCategoryId.AirportRoads,
                 "Airport road",
-                "Airport road",
-                "Highlight airport roads",
                 "SubBarPublicTransportAirportArea",
-                SteamHelper.DLC.AirportDLC),
+                SteamHelper.DLC.AirportDLC,
+                HighlightCategoryGroup.SpecialNetworks),
             new HighlightCategoryDefinition(
                 HighlightCategoryId.TrainTracks,
                 "Train tracks",
-                "Train tracks",
-                "Highlight train tracks",
                 "SubBarPublicTransportTrain",
-                SteamHelper.DLC.None),
+                SteamHelper.DLC.None,
+                HighlightCategoryGroup.PublicTransport),
             new HighlightCategoryDefinition(
                 HighlightCategoryId.MetroTracks,
                 "Metro tracks",
-                "Metro tracks",
-                "Highlight metro tracks",
                 "SubBarPublicTransportMetro",
-                SteamHelper.DLC.None),
+                SteamHelper.DLC.None,
+                HighlightCategoryGroup.PublicTransport),
             new HighlightCategoryDefinition(
                 HighlightCategoryId.TramTracks,
-                "Tram tracks",
                 "Tram and Trolley tracks",
-                "Highlight tram tracks",
                 "SubBarPublicTransportTram",
-                SteamHelper.DLC.None),
+                SteamHelper.DLC.None,
+                HighlightCategoryGroup.PublicTransport),
             new HighlightCategoryDefinition(
                 HighlightCategoryId.MonorailTracks,
                 "Monorail tracks",
-                "Monorail tracks",
-                "Highlight monorail tracks",
                 "SubBarPublicTransportMonorail",
-                SteamHelper.DLC.None),
+                SteamHelper.DLC.None,
+                HighlightCategoryGroup.PublicTransport),
             new HighlightCategoryDefinition(
                 HighlightCategoryId.CableCars,
-                "Cable cars",
                 "Cable car paths",
-                "Highlight cable car paths",
                 "SubBarPublicTransportCableCar",
-                SteamHelper.DLC.None)
+                SteamHelper.DLC.None,
+                HighlightCategoryGroup.PublicTransport)
         };
 
-        public static HighlightCategoryDefinition[] GetEligible()
+        public static HighlightCategoryDefinition[] GetAllEligible()
         {
             return All
-                .Where(definition => definition.RequiredDlc == SteamHelper.DLC.None || SteamHelper.IsDLCOwned(definition.RequiredDlc))
+                .Where(IsEligible)
                 .ToArray();
         }
 
+        public static HighlightCategoryDefinition[] GetEligible(HighlightCategoryGroup categoryGroup)
+        {
+            return All
+                .Where(definition => definition.CategoryGroup == categoryGroup)
+                .Where(IsEligible)
+                .ToArray();
+        }
+
+        private static bool IsEligible(HighlightCategoryDefinition definition)
+        {
+            return definition.RequiredDlc == SteamHelper.DLC.None ||
+                   SteamHelper.IsDLCOwned(definition.RequiredDlc);
+        }
     }
 }

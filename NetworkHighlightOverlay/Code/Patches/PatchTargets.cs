@@ -4,7 +4,7 @@ using ColossalFramework.Math;
 using HarmonyLib;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.Patches
+namespace NetworkHighlightOverlay.Patches
 {
     public static class PatchTargets
     {

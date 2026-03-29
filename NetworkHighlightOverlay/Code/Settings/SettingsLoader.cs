@@ -2,7 +2,7 @@ using System.IO;
 using System.Xml.Serialization;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.ModOptions
+namespace NetworkHighlightOverlay.Settings
 {
     public static class SettingsLoader
     {

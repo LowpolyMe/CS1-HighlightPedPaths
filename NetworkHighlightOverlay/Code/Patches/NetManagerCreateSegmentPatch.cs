@@ -1,8 +1,8 @@
-using HarmonyLib;
 using System.Reflection;
-using NetworkHighlightOverlay.Code.Core;
+using HarmonyLib;
+using NetworkHighlightOverlay.Core;
 
-namespace NetworkHighlightOverlay.Code.Patches
+namespace NetworkHighlightOverlay.Patches
 {
     [HarmonyPatch]
     public static class NetManagerCreateSegmentPatch

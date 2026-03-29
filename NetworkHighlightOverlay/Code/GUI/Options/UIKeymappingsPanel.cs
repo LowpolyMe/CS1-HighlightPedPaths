@@ -2,36 +2,25 @@ using ColossalFramework;
 using ColossalFramework.UI;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.Utility
+namespace NetworkHighlightOverlay.GUI.Options
 {
     public sealed class UIKeymappingsPanel : UICustomControl
     {
-        private static readonly string KeyBindingTemplate = "KeyBindingTemplate";
-
         private SavedInputKey _editingBinding;
         private int _count;
 
         public UIComponent AddKeymapping(string label, SavedInputKey savedInputKey)
         {
-            UIPanel row = component.AttachUIComponent(UITemplateManager.GetAsGameObject(KeyBindingTemplate)) as UIPanel;
-            if (row == null)
-                throw new System.InvalidOperationException("KeyBindingTemplate must create a UIPanel.");
-
-            if ((_count++ % 2) == 1)
-                row.backgroundSprite = null;
-
-            UILabel nameLabel = row.Find<UILabel>("Name");
-            UIButton bindingButton = row.Find<UIButton>("Binding");
-            if (nameLabel == null || bindingButton == null)
-                throw new System.InvalidOperationException("Key binding template is missing required controls.");
+            UIButton bindingButton = UIUtility.CreateKeyBindingButton(
+                component,
+                label,
+                savedInputKey.ToLocalizedString("KEYNAME"),
+                savedInputKey,
+                (_count++ % 2) == 1);
 
             bindingButton.eventKeyDown += OnBindingKeyDown;
             bindingButton.eventMouseDown += OnBindingMouseDown;
             bindingButton.eventVisibilityChanged += OnBindingVisibilityChanged;
-
-            nameLabel.text = label;
-            bindingButton.text = savedInputKey.ToLocalizedString("KEYNAME");
-            bindingButton.objectUserData = savedInputKey;
             return bindingButton;
         }
 

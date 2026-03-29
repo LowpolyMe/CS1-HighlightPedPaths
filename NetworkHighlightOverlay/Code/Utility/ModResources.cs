@@ -5,7 +5,7 @@ using System.Reflection;
 using ColossalFramework.Plugins;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.Utility
+namespace NetworkHighlightOverlay.Utility
 {
     public static class ModResources
     {

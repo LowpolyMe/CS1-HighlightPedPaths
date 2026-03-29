@@ -1,16 +1,16 @@
 using System;
-using NetworkHighlightOverlay.Code.Core;
-using NetworkHighlightOverlay.Code.ModOptions;
-using UnityEngine;
+using NetworkHighlightOverlay.Core;
+using NetworkHighlightOverlay.Settings;
+using NetworkHighlightOverlay.Utility;
 using UnifiedUI.Helpers;
-using NetworkHighlightOverlay.Code.Utility;
+using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.UI
+namespace NetworkHighlightOverlay.GUI.UUI
 {
     public sealed class UuiButtonController
     {
         private const string ButtonName = "NetworkHighlightOverlay.ToggleButton";
-        private const string ToggleTooltip = "Toggle Network Highlight Overlay";
+        private const string ToggleTooltip = "Toggle Network Highlights";
 
         private UUICustomButton _button;
         private Action<bool> _toggleRequested;

@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using ColossalFramework.UI;
-using NetworkHighlightOverlay.Code.Utility;
+using NetworkHighlightOverlay.Utility;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.GUI
+namespace NetworkHighlightOverlay.GUI.TogglePanel
 {
     public sealed class ToggleButtonAtlas : IDisposable
     {

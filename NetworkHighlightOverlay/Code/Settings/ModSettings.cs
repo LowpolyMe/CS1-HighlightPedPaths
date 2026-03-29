@@ -1,34 +1,35 @@
 using System;
 using System.Collections.Generic;
 using ColossalFramework;
-using NetworkHighlightOverlay.Code.Utility;
+using NetworkHighlightOverlay.HighlightCategories;
+using NetworkHighlightOverlay.Utility;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.ModOptions
+namespace NetworkHighlightOverlay.Settings
 {
     public sealed class ModSettings
     {
         private const string KeybindingsFileName = "NetworkHighlightOverlay_Keybindings";
-        private const string ToggleOverlayHotkeyName = "NetworkHighlightOverlay_ToggleOverlay";
-        private static readonly InputKey DefaultToggleOverlayHotkey = SavedInputKey.Encode(KeyCode.F9, false, false, false);
+        private const string ToggleHighlightsHotkeyName = "NetworkHighlightOverlay_ToggleHighlightsHotkey";
+        private static readonly InputKey _defaultToggleHighlightsHotkey = SavedInputKey.Encode(KeyCode.F9, false, false, false);
 
         public static readonly ModSettings Shared = new ModSettings();
 
         private readonly Config _config;
-        private readonly SavedInputKey _toggleOverlayHotkey;
+        private readonly SavedInputKey _toggleHighlightsHotkey;
         private readonly Dictionary<HighlightCategoryId, HighlightCategorySetting> _categoryStates =
             new Dictionary<HighlightCategoryId, HighlightCategorySetting>();
 
         public event Action SettingsChanged;
         public event Action HighlightRulesChanged;
 
-        public SavedInputKey ToggleOverlayHotkey => _toggleOverlayHotkey;
+        public SavedInputKey ToggleHighlightsHotkey => _toggleHighlightsHotkey;
 
         private ModSettings()
         {
             EnsureKeybindingsSettingsFile();
-            _toggleOverlayHotkey = new SavedInputKey(
-                ToggleOverlayHotkeyName,
+            _toggleHighlightsHotkey = new SavedInputKey(
+                ToggleHighlightsHotkeyName,
                 KeybindingsFileName,
                 KeyCode.F9,
                 false,
@@ -220,9 +221,22 @@ namespace NetworkHighlightOverlay.Code.ModOptions
             }
         }
 
+        public bool IsInGameTogglePanelEnabled
+        {
+            get => _config.IsInGameTogglePanelEnabled;
+            set
+            {
+                if (_config.IsInGameTogglePanelEnabled == value)
+                    return;
+
+                _config.IsInGameTogglePanelEnabled = value;
+                SaveAndRaise(false);
+            }
+        }
+
         public void ResetToDefaults()
         {
-            _toggleOverlayHotkey.value = DefaultToggleOverlayHotkey;
+            _toggleHighlightsHotkey.value = _defaultToggleHighlightsHotkey;
             ApplyConfig(new Config());
         }
 
@@ -236,6 +250,7 @@ namespace NetworkHighlightOverlay.Code.ModOptions
             _config.HighlightBridges = source.HighlightBridges;
             _config.HighlightTunnels = source.HighlightTunnels;
             _config.UseUuiButton = source.UseUuiButton;
+            _config.IsInGameTogglePanelEnabled = source.IsInGameTogglePanelEnabled;
 
             _config.PanelX = source.PanelX;
             _config.PanelY = source.PanelY;

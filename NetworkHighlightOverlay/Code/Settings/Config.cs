@@ -1,6 +1,6 @@
 using System.Xml.Serialization;
 
-namespace NetworkHighlightOverlay.Code.ModOptions
+namespace NetworkHighlightOverlay.Settings
 {
     [XmlRoot("NetworkNetworkHighlightSettings")]
     public class Config
@@ -37,6 +37,7 @@ namespace NetworkHighlightOverlay.Code.ModOptions
         public bool HighlightBridges { get; set; } = true;
         public bool HighlightTunnels { get; set; } = true;
         public bool UseUuiButton { get; set; } = true;
+        public bool IsInGameTogglePanelEnabled { get; set; } = true;
         
         public float PanelX { get; set; } = -1f;
         public float PanelY { get; set; } = -1f;

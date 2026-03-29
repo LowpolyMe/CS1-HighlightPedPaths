@@ -1,8 +1,9 @@
 using System;
-using NetworkHighlightOverlay.Code.ModOptions;
+using NetworkHighlightOverlay.HighlightCategories;
+using NetworkHighlightOverlay.Settings;
 using UnityEngine;
 
-namespace NetworkHighlightOverlay.Code.Core
+namespace NetworkHighlightOverlay.Core
 {
     public static class HighlightRules
     {
@@ -25,9 +26,7 @@ namespace NetworkHighlightOverlay.Code.Core
             bool isBridge;
             bool isTunnel;
 
-            const VehicleInfo.VehicleType TramLikeMask =
-                VehicleInfo.VehicleType.Tram |
-                VehicleInfo.VehicleType.Trolleybus;
+            const VehicleInfo.VehicleType tramLikeMask = VehicleInfo.VehicleType.Tram | VehicleInfo.VehicleType.Trolleybus;
 
             bool isRoadFamily = ai is RoadAI || ai is RoadBridgeAI || ai is RoadTunnelAI;
             bool isRoadBridge = ai is RoadBridgeAI;
@@ -48,7 +47,7 @@ namespace NetworkHighlightOverlay.Code.Core
                 VehicleInfo.VehicleType laneVehicleTypes = GetLaneVehicleTypes(info);
                 isPedestrianStreet = IsPedestrianStreet(info);
                 isHighway = IsHighway(info);
-                hasTramOrTrolleyLanes = (laneVehicleTypes & TramLikeMask) != 0;
+                hasTramOrTrolleyLanes = (laneVehicleTypes & tramLikeMask) != 0;
                 hasMonorailLanes = (laneVehicleTypes & VehicleInfo.VehicleType.Monorail) != 0;
                 hasCarLanes = (laneVehicleTypes & VehicleInfo.VehicleType.Car) != 0;
                 isRaceRoad = IsRaceRoad(info);
